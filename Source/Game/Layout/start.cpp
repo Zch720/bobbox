@@ -14,7 +14,6 @@ void StartLayout::Init() {
 	title.LoadBitmapByString(titleImgPath, RGB(0x00, 0xff, 0x00));
 	title.SetTopLeft(630, 350);
 	title.SetAnimation(45, false);
-	//title.SetFrameIndexOfBitmap(3);
 }
 
 void StartLayout::Reset() {
