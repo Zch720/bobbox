@@ -17,6 +17,9 @@
     <Filter Include="MyGame\Layout">
       <UniqueIdentifier>{23fa268f-dc3d-4f53-8ca1-4cf5cc051d95}</UniqueIdentifier>
     </Filter>
+    <Filter Include="MyGame\util">
+      <UniqueIdentifier>{94120b84-1aef-4ad0-8bc4-cb8c52dda6ff}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="RES\GAME.RC2">
@@ -60,6 +63,12 @@
     <ClCompile Include="Source\Game\Layout\start.cpp">
       <Filter>MyGame\Layout</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Game\Layout\choose_level.cpp">
+      <Filter>MyGame\Layout</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Game\util\button.cpp">
+      <Filter>MyGame\util</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Library\audio.h">
@@ -97,6 +106,12 @@
     </ClInclude>
     <ClInclude Include="Source\Game\Layout\start.h">
       <Filter>MyGame\Layout</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Game\Layout\choose_level.h">
+      <Filter>MyGame\Layout</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Game\util\button.h">
+      <Filter>MyGame\util</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
