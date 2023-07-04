@@ -14,6 +14,7 @@ CGameStateInit::CGameStateInit(CGame *g) : CGameState(g) {
 
 void CGameStateInit::OnInit() {
 	ShowInitProgress(0, "Start Initialize...");
+	startLayout.Init();
 }
 
 void CGameStateInit::OnBeginState() {
@@ -27,4 +28,5 @@ void CGameStateInit::OnLButtonDown(UINT nFlags, CPoint point) {
 }
 
 void CGameStateInit::OnShow() {
+	startLayout.Show();
 }

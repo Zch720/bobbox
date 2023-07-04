@@ -38,6 +38,7 @@
  *      3. Use ShowInitProgress(percent) to display loading progress.
 */
 
+#include "Layout//start.h"
 
 namespace game_framework {
 
@@ -52,6 +53,7 @@ namespace game_framework {
 		void OnShow();
 	private:
 		CMovingBitmap logo;
+		StartLayout startLayout;
 	};
 
 	class CGameStateRun : public CGameState {
