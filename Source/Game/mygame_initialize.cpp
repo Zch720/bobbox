@@ -52,7 +52,7 @@ void CGameStateInit::OnLButtonDown(UINT nFlags, CPoint point) {
 		startLayoutShown = true;
 		chooseLevelLayout.Reset();
 	} else {
-		chooseLevelLayout.MouseClick(point);
+		chooseLevelLayout.GetMouseClickLevelButton(point);
 	}
 }
 
