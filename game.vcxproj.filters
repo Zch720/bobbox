@@ -75,6 +75,12 @@
     <ClCompile Include="Source\Game\Level\level.cpp">
       <Filter>MyGame\Level</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Game\Level\object.cpp">
+      <Filter>MyGame\Level</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Game\util\direction.cpp">
+      <Filter>MyGame\util</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Library\audio.h">
@@ -124,6 +130,12 @@
     </ClInclude>
     <ClInclude Include="Source\Game\game_status.h">
       <Filter>MyGame</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Game\Level\object.h">
+      <Filter>MyGame\Level</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Game\util\direction.h">
+      <Filter>MyGame\util</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

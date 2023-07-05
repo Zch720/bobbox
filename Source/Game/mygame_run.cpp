@@ -29,11 +29,20 @@ void CGameStateRun::OnInit() {
 }
 
 void CGameStateRun::OnMove() {
+	levelManager.Update();
 }
 
 void CGameStateRun::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags) {
 	if (nChar == VK_ESCAPE) {
 		GotoGameState(GAME_STATE_INIT);
+	} else if (nChar == VK_UP || nChar == 'W') {
+		levelManager.MoveUp();
+	} else if (nChar == VK_DOWN || nChar == 'S') {
+		levelManager.MoveDown();
+	} else if (nChar == VK_LEFT || nChar == 'A') {
+		levelManager.MoveLeft();
+	} else if (nChar == VK_RIGHT || nChar == 'D') {
+		levelManager.MoveRight();
 	} else {
 		GotoGameState(GAME_STATE_OVER);
 	}
