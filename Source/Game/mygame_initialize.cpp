@@ -41,6 +41,11 @@ void CGameStateInit::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags) {
 			chooseLevelLayout.ChooserMoveUp();
 		} else if (nChar == VK_DOWN || nChar == 'S') {
 			chooseLevelLayout.ChooserMoveDown();
+		} else if (nChar == VK_RETURN) {
+			currentLevel = chooseLevelLayout.ChooseLevel();
+			if (currentLevel != -1) {
+				GotoGameState(GAME_STATE_RUN);
+			}
 		} else {
 			GotoGameState(GAME_STATE_OVER);
 		}
@@ -52,7 +57,10 @@ void CGameStateInit::OnLButtonDown(UINT nFlags, CPoint point) {
 		startLayoutShown = true;
 		chooseLevelLayout.Reset();
 	} else {
-		chooseLevelLayout.GetMouseClickLevelButton(point);
+		currentLevel = chooseLevelLayout.GetMouseClickLevelButton(point);
+		if (currentLevel != -1) {
+			GotoGameState(GAME_STATE_RUN);
+		}
 	}
 }
 

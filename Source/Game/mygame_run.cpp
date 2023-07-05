@@ -16,15 +16,27 @@ CGameStateRun::~CGameStateRun() {
 }
 
 void CGameStateRun::OnBeginState() {
+	if (currentLevel == 0 || currentLevel == 17) {
+		gameType = STORY;
+	} else {
+		gameType = LEVEL;
+		levelManager.LoadLevel(currentLevel);
+	}
+}
+
+void CGameStateRun::OnInit() {
+	levelManager.Init();
 }
 
 void CGameStateRun::OnMove() {
 }
 
-void CGameStateRun::OnInit() {
-}
-
 void CGameStateRun::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags) {
+	if (nChar == VK_ESCAPE) {
+		GotoGameState(GAME_STATE_INIT);
+	} else {
+		GotoGameState(GAME_STATE_OVER);
+	}
 }
 
 void CGameStateRun::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags) {
@@ -46,4 +58,7 @@ void CGameStateRun::OnRButtonUp(UINT nFlags, CPoint point) {
 }
 
 void CGameStateRun::OnShow() {
+	if (gameType == LEVEL) {
+		levelManager.Show();
+	}
 }

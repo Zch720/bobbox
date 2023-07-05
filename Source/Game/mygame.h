@@ -38,9 +38,10 @@
  *      3. Use ShowInitProgress(percent) to display loading progress.
 */
 
+#include "game_status.h"
 #include "Layout/start.h"
 #include "Layout/choose_level.h"
-#include "game_status.h"
+#include "Level/level.h"
 
 namespace game_framework {
 
@@ -78,6 +79,14 @@ namespace game_framework {
 	protected:
 		void OnMove();
 		void OnShow();
+	private:
+		enum Type {
+			STORY,
+			LEVEL
+		};
+
+		Type gameType;
+		Level levelManager;
 	};
 
 	class CGameStateOver : public CGameState {
