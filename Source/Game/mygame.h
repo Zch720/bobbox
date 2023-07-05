@@ -38,7 +38,8 @@
  *      3. Use ShowInitProgress(percent) to display loading progress.
 */
 
-#include "Layout//start.h"
+#include "Layout/start.h"
+#include "Layout/choose_level.h"
 
 namespace game_framework {
 
@@ -47,13 +48,17 @@ namespace game_framework {
 		CGameStateInit(CGame *g);
 		void OnInit();
 		void OnBeginState();
-		void OnKeyUp(UINT, UINT, UINT);
+		void OnKeyDown(UINT, UINT, UINT);
 		void OnLButtonDown(UINT nFlags, CPoint point);
+		void OnMouseMove(UINT nFlags, CPoint point);
 	protected:
 		void OnShow();
 	private:
+		bool startLayoutShown = false;
+
 		CMovingBitmap logo;
 		StartLayout startLayout;
+		ChooseLevelLayout chooseLevelLayout;
 	};
 
 	class CGameStateRun : public CGameState {
