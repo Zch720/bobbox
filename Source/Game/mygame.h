@@ -40,6 +40,7 @@
 
 #include "Layout/start.h"
 #include "Layout/choose_level.h"
+#include "game_status.h"
 
 namespace game_framework {
 

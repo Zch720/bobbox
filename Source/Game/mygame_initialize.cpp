@@ -9,6 +9,8 @@
 
 using namespace game_framework;
 
+int currentLevel = -1;
+
 CGameStateInit::CGameStateInit(CGame *g) : CGameState(g) {
 }
 
