@@ -13,13 +13,13 @@ public:
 	void SetBackButtonOnClickFunc(Button::OnClickFunc func);
 
 	void MouseMove(POINT point);
-	void MouseClick(POINT point);
+	int GetMouseClickLevelButton(POINT point);
 
 	void ChooserMoveLeft();
 	void ChooserMoveRight();
 	void ChooserMoveUp();
 	void ChooserMoveDown();
-	void ChooseLevel();
+	int ChooseLevel();
 
 private:
 	static const std::string RESOURCES_DIR;

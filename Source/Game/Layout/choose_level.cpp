@@ -51,9 +51,11 @@ void ChooseLevelLayout::MouseMove(POINT point) {
 	}
 }
 
-void ChooseLevelLayout::MouseClick(POINT point) {
+int ChooseLevelLayout::GetMouseClickLevelButton(POINT point) {
 	backButton.CheckMouseClick(point);
-	// TODO complete button click
+
+	if (levelButtons[chooserIndex].IsHover(point)) return chooserIndex;
+	return -1;
 }
 
 void ChooseLevelLayout::ChooserMoveLeft() {
@@ -74,8 +76,8 @@ void ChooseLevelLayout::ChooserMoveDown() {
 	setChooserPosition((chooserIndex + 6) % 18);
 }
 
-void ChooseLevelLayout::ChooseLevel() {
-	// TODO complete button click
+int ChooseLevelLayout::ChooseLevel() {
+	return chooserIndex;
 }
 
 void ChooseLevelLayout::Show() {
