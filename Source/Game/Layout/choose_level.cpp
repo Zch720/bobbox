@@ -34,6 +34,10 @@ void ChooseLevelLayout::Reset() {
 	setChooserPosition(1);
 }
 
+void ChooseLevelLayout::SetLastestDoneLevel(int level) {
+	lastestDoneLevel = level;
+}
+
 void ChooseLevelLayout::SetBackButtonOnClickFunc(Button::OnClickFunc func) {
 	backButton.SetOnClickFunc(func);
 }
@@ -81,6 +85,9 @@ void ChooseLevelLayout::Show() {
 	}
 	chooser.ShowBitmap();
 	backButton.ShowBitmap();
+	for (int i = 1; i <= lastestDoneLevel; i++) {
+		levelDones[i].ShowBitmap();
+	}
 }
 
 void ChooseLevelLayout::setChooserPosition(int index) {

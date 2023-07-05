@@ -9,6 +9,7 @@ public:
 	void Reset();
 	void Show();
 
+	void SetLastestDoneLevel(int level);
 	void SetBackButtonOnClickFunc(Button::OnClickFunc func);
 
 	void MouseMove(POINT point);
@@ -31,6 +32,7 @@ private:
 	std::vector<game_framework::CMovingBitmap> levelDones = std::vector<game_framework::CMovingBitmap>(18);
 	std::vector<CPoint> chooserPositions = std::vector<CPoint>(18);
 	int chooserIndex = 1;
+	int lastestDoneLevel = 0;
 
 	void setChooserPosition(int index);
 };
