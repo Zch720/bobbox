@@ -221,6 +221,7 @@ int Level::getMoveBobBlock(Object &object, Direction direction, int waitBlock) {
 		position = GetOffsetPoint(position, direction);
 		for (Object& box : boxs) {
 			if (isPointInsideObject(box, position)) {
+				if (moveBlock != 0 && !isObjectOnIce(box.GetType(), box.GetGameboardPosition())) return moveBlock;
 				if (box.IsMoving() || moveObject(box, direction, moveBlock) == 0) return moveBlock;
 			}
 		}
@@ -236,6 +237,7 @@ int Level::getMoveSmallBoxBlock(Object &object, Direction direction, int waitBlo
 		position = GetOffsetPoint(position, direction);
 		for (Object& box : boxs) {
 			if (isPointInsideObject(box, position)) {
+				if (moveBlock != 0 && !isObjectOnIce(box.GetType(), box.GetGameboardPosition())) return moveBlock;
 				if (box.IsMoving() || moveObject(box, direction, moveBlock) == 0) return moveBlock;
 			}
 		}
@@ -250,11 +252,42 @@ int Level::getMoveMediumBoxBlock(Object &object, Direction direction, int waitBl
 }
 
 int Level::getMoveMediumBoxBlockHorizontal(Object& object, Direction direction, int waitBlock) {
-	return 0;
+	int moveBlock = 0;
+	POINT objectMainPosition = object.GetGameboardPosition();
+	POINT position = objectMainPosition;
+	if (direction == RIGHT) position.x += 1;
+	while (!isMediumBoxReachWall(objectMainPosition, direction) && (moveBlock == 0 || isObjectOnIce(Object::MEDIUM_BOX, objectMainPosition))) {
+		objectMainPosition = GetOffsetPoint(objectMainPosition, direction);
+		position = GetOffsetPoint(position, direction);
+		for (Object& box : boxs) {
+			if (isPointInsideObject(box, position)) {
+				if (moveBlock != 0 && !isObjectOnIce(box.GetType(), box.GetGameboardPosition())) return moveBlock;
+				if (box.IsMoving() || moveObject(box, direction, moveBlock) == 0) return moveBlock;
+			}
+		}
+		moveBlock++;
+	}
+	return moveBlock;
 }
 
 int Level::getMoveMediumBoxBlockVertical(Object& object, Direction direction, int waitBlock) {
-	return 0;
+	int moveBlock = 0;
+	POINT objectMainPosition = object.GetGameboardPosition();
+	POINT position1 = objectMainPosition;
+	POINT position2 = { objectMainPosition.x + 1, objectMainPosition.y };
+	while (!isMediumBoxReachWall(objectMainPosition, direction) && (moveBlock == 0 || isObjectOnIce(Object::MEDIUM_BOX, objectMainPosition))) {
+		objectMainPosition = GetOffsetPoint(objectMainPosition, direction);
+		position1 = GetOffsetPoint(position1, direction);
+		position2 = GetOffsetPoint(position2, direction);
+		for (Object& box : boxs) {
+			if (isPointInsideObject(box, position1) || isPointInsideObject(box, position2)) {
+				if (moveBlock != 0 && !isObjectOnIce(box.GetType(), box.GetGameboardPosition())) return moveBlock;
+				if (box.IsMoving() || moveObject(box, direction, moveBlock) == 0) return moveBlock;
+			}
+		}
+		moveBlock++;
+	}
+	return moveBlock;
 }
 
 bool Level::isObjectReachWall(Object& object, Direction direction) {
