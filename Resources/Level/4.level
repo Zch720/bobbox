@@ -9,13 +9,19 @@
 0 0 1 1 1 0
 0 0 0 1 0 0
 
-#goal 0
+#goal 2
+3 2
+3 3
 
 #bob 3 4
 
-#holes 0
+#holes 1
+2 2
 
-#small_box 0
+#small_box 3
+1 1
+4 1
+4 2
 
 #medium_box 0
 
