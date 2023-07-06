@@ -111,11 +111,38 @@ void Level::MoveRight() {
 	moveBuffer.push(RIGHT);
 }
 
-void Level::Update() {
-	checkHoleFill();
+void Level::Undo() {
+	if (undos.empty()) return;
 
+	std::vector<UndoInfo> undoSteps = undos.top();
+	undos.pop();
+
+	UndoInfo step;
+	for (size_t i = undoSteps.size() - 1; i >= 0; i--) {
+		step = undoSteps[i];
+		if (step.type == UNDO_UP) {
+			findObjectAtPosition(step.objectType, step.objectFinalPosition).MoveDown(step.moveBlock, 0, false);
+		} else if (step.type == UNDO_DOWN) {
+			findObjectAtPosition(step.objectType, step.objectFinalPosition).MoveUp(step.moveBlock, 0, false);
+		} else if (step.type == UNDO_LEFT) {
+			findObjectAtPosition(step.objectType, step.objectFinalPosition).MoveRight(step.moveBlock, 0, false);
+		} else if (step.type == UNDO_RIGHT) {
+			findObjectAtPosition(step.objectType, step.objectFinalPosition).MoveLeft(step.moveBlock, 0, false);
+		} else if (step.type == UNDO_FILL) {
+			boxs.push_back(filledObjectBuffer.back());
+			filledObjectBuffer.pop_back();
+			holes.push_back(filledObjectBuffer.back());
+			filledObjectBuffer.pop_back();
+		}
+		if (i == 0) break;
+	}
+}
+
+void Level::Update() {
 	if (moveBuffer.empty()) return;
 	if (bob.IsMoving()) return;
+
+	undoBuffer.clear();
 
 	Direction moveDirection = moveBuffer.front();
 	moveBuffer.pop();
@@ -128,12 +155,21 @@ void Level::Update() {
 	} else if (moveDirection == RIGHT) {
 		moveObject(bob, RIGHT, 0);
 	}
+	checkHoleFill();
+
+	undos.push(undoBuffer);
 }
 
 void Level::Show() {
 	background.ShowBitmap();
-	for (Object& hole : holes) {
+	for (Object &hole : holes) {
 		hole.Show();
+	}
+	for (size_t i = 1; i < filledObjectBuffer.size(); i += 2) {
+		if (filledObjectBuffer[i].IsMoving()) {
+			filledObjectBuffer[i - 1].Show();
+			filledObjectBuffer[i].Show();
+		}
 	}
 	for (Object &box : boxs) {
 		box.Show();
@@ -180,16 +216,37 @@ void Level::checkHoleFill() {
 	for (size_t holeIndex = 0; holeIndex < holes.size(); holeIndex++) {
 		for (size_t boxIndex = 0; boxIndex < boxs.size(); boxIndex++) {
 			if (boxs[boxIndex].GetType() != Object::SMALL_BOX) continue;
-			if (boxs[boxIndex].IsMoving()) continue;
 			POINT holePosition = holes[holeIndex].GetGameboardPosition();
 			POINT boxPosition = boxs[boxIndex].GetGameboardPosition();
 			if (holePosition.x == boxPosition.x && holePosition.y == boxPosition.y) {
+				filledObjectBuffer.push_back(holes[holeIndex]);
+				filledObjectBuffer.push_back(boxs[boxIndex]);
+				UndoInfo undoInfo;
+				undoInfo.type = UNDO_FILL;
+				undoBuffer.push_back(undoInfo);
+
 				holes.erase(holes.begin() + (holeIndex--));
 				boxs.erase(boxs.begin() + (boxIndex--));
 				break;
 			}
 		}
 	}
+}
+
+Object& Level::findObjectAtPosition(Object::Type type, POINT position) {
+	POINT objectPosition;
+	if (type == Object::BOB) {
+		objectPosition = bob.GetGameboardPosition();
+		if (objectPosition.x == position.x && objectPosition.y == position.y) return bob;
+	} else {
+		for (Object& box : boxs) {
+			if (box.GetType() != type) continue;
+			objectPosition = box.GetGameboardPosition();
+			if (objectPosition.x == position.x && objectPosition.y == position.y) return box;
+		}
+	}
+
+	throw runtime_error("can not find object at point(" + to_string(position.x) + ", " + to_string(position.y) + ")");
 }
 
 int Level::moveObject(Object &object, Direction direction, int waitBlock) {
@@ -202,15 +259,24 @@ int Level::moveObject(Object &object, Direction direction, int waitBlock) {
 		moveBlock = getMoveMediumBoxBlock(object, direction, waitBlock);
 	}
 
+	UndoInfo undoInfo = {};
 	if (direction == UP) {
 		object.MoveUp(moveBlock, waitBlock, true);
+		undoInfo.type = UNDO_UP;
 	} else if (direction == DOWN) {
 		object.MoveDown(moveBlock, waitBlock, true);
+		undoInfo.type = UNDO_DOWN;
 	} else if (direction == LEFT) {
 		object.MoveLeft(moveBlock, waitBlock, true);
+		undoInfo.type = UNDO_LEFT;
 	} else if (direction == RIGHT) {
 		object.MoveRight(moveBlock, waitBlock, true);
+		undoInfo.type = UNDO_RIGHT;
 	}
+	undoInfo.objectType = object.GetType();
+	undoInfo.objectFinalPosition = object.GetGameboardPosition();
+	undoInfo.moveBlock = moveBlock;
+	undoBuffer.push_back(undoInfo);
 	return moveBlock;
 }
 

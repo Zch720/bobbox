@@ -48,6 +48,11 @@ void CGameStateRun::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags) {
 		levelManager.MoveLeft();
 	} else if (nChar == VK_RIGHT || nChar == 'D') {
 		levelManager.MoveRight();
+	} else if (nChar == 'Z' || nChar == 'U') {
+		levelManager.Undo();
+	} else if (nChar == 'R') {
+		levelManager.Clear();
+		GotoGameState(GAME_STATE_RUN);
 	}
 }
 

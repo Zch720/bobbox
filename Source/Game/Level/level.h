@@ -1,6 +1,7 @@
 #pragma once
 
 #include <queue>
+#include <stack>
 #include "../../Library/gameutil.h"
 #include "object.h"
 
@@ -18,16 +19,25 @@ public:
 	void MoveDown();
 	void MoveLeft();
 	void MoveRight();
+	void Undo();
 
 	void Update();
 	void Show();
 
 private:
-	struct MoveInfo {
-		Object &object;
-		POINT currentPosition;
+	enum UndoType {
+		UNDO_UP,
+		UNDO_DOWN,
+		UNDO_LEFT,
+		UNDO_RIGHT,
+		UNDO_FILL
+	};
+
+	struct UndoInfo {
+		UndoType type;
+		Object::Type objectType;
+		POINT objectFinalPosition;
 		int moveBlock;
-		int waitBlock;
 	};
 
 	static std::string RESOURCES_DIR;
@@ -44,12 +54,17 @@ private:
 	std::vector<Object> holes;
 	std::vector<Object> boxs;
 
+	std::stack<std::vector<UndoInfo>> undos;
+	std::vector<UndoInfo> undoBuffer;
+	std::vector<Object> filledObjectBuffer;
+
 	bool isPointInsideObject(Object &object, POINT point);
 	bool isObjectOnIce(Object::Type type, POINT position);
 
 	POINT getBoxRealPosition(POINT origionPosition, POINT gameboardPosition);
 
 	void checkHoleFill();
+	Object& findObjectAtPosition(Object::Type objectType, POINT position);
 
 	int moveObject(Object &object, Direction direction, int waitBlock);
 	int getMoveBobBlock(Object &object, Direction direction, int waitBlcok);
