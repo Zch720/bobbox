@@ -157,7 +157,8 @@ void Level::Update() {
 	}
 	checkHoleFill();
 
-	undos.push(undoBuffer);
+	if (undoBuffer.size() != 0)
+		undos.push(undoBuffer);
 }
 
 void Level::Show() {
