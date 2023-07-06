@@ -23,6 +23,13 @@ public:
 	void Show();
 
 private:
+	struct MoveInfo {
+		Object &object;
+		POINT currentPosition;
+		int moveBlock;
+		int waitBlock;
+	};
+
 	static std::string RESOURCES_DIR;
 	static std::vector<game_framework::CMovingBitmap> levelBackgrounds;
 
@@ -37,14 +44,21 @@ private:
 	std::vector<Object> holes;
 	std::vector<Object> boxs;
 
-	bool isPointInsizObject(Object &object, POINT point);
+	bool isPointInsideObject(Object &object, POINT point);
+	bool isObjectOnIce(Object::Type type, POINT position);
 
 	POINT getBoxRealPosition(POINT origionPosition, POINT gameboardPosition);
+
+	void checkHoleFill();
 
 	int moveObject(Object &object, Direction direction, int waitBlock);
 	int getMoveBobBlock(Object &object, Direction direction, int waitBlcok);
 	int getMoveSmallBoxBlock(Object &object, Direction direction, int waitBlock);
+	int getMoveMediumBoxBlock(Object &object, Direction direction, int waitBlock);
+	int getMoveMediumBoxBlockHorizontal(Object &object, Direction direction, int waitBlock);
+	int getMoveMediumBoxBlockVertical(Object &object, Direction direction, int waitBlock);
 	bool isObjectReachWall(Object &object, Direction direction);
 	bool isBobReachWall(POINT position, Direction direction);
 	bool isSmallBoxReachWall(POINT position, Direction direction);
+	bool isMediumBoxReachWall(POINT position, Direction direction);
 };
