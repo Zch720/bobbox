@@ -203,7 +203,7 @@ bool Level::isObjectOnIce(Object::Type type, POINT position) {
 	}
 	if (type == Object::LARGE_BOX) {
 		return gameboard[position.x][position.y] == 2 && gameboard[position.x + 1][position.y] == 2
-			|| gameboard[position.x][position.y + 1] == 2 && gameboard[position.x + 1][position.y + 1] == 2;
+			&& gameboard[position.x][position.y + 1] == 2 && gameboard[position.x + 1][position.y + 1] == 2;
 	}
 	throw new runtime_error("Object type wrong!");
 }
@@ -251,12 +251,15 @@ Object& Level::findObjectAtPosition(Object::Type type, POINT position) {
 
 int Level::moveObject(Object &object, Direction direction, int waitBlock) {
 	int moveBlock = 0;
-	if (object.GetType() == Object::BOB) {
+	Object::Type type = object.GetType();
+	if (type == Object::BOB) {
 		moveBlock = getMoveBobBlock(object, direction, waitBlock);
-	} else if (object.GetType() == Object::SMALL_BOX) {
+	} else if (type == Object::SMALL_BOX) {
 		moveBlock = getMoveSmallBoxBlock(object, direction, waitBlock);
-	} else if (object.GetType() == Object::MEDIUM_BOX) {
+	} else if (type == Object::MEDIUM_BOX) {
 		moveBlock = getMoveMediumBoxBlock(object, direction, waitBlock);
+	} else if (type == Object::LARGE_BOX) {
+		moveBlock = getMoveLargeBoxBlock(object, direction, waitBlock);
 	}
 
 	UndoInfo undoInfo = {};
@@ -356,6 +359,59 @@ int Level::getMoveMediumBoxBlockVertical(Object& object, Direction direction, in
 	return moveBlock;
 }
 
+int Level::getMoveLargeBoxBlock(Object& object, Direction direction, int waitBlock) {
+	if (direction == UP || direction == DOWN) return getMoveLargeBoxBlockVertical(object, direction, waitBlock);
+	return getMoveLargeBoxBlockHorizontal(object, direction, waitBlock);
+}
+
+int Level::getMoveLargeBoxBlockHorizontal(Object& object, Direction direction, int waitBlock) {
+	int moveBlock = 0;
+	POINT objectMainPosition = object.GetGameboardPosition();
+	POINT position1 = objectMainPosition;
+	POINT position2 = { objectMainPosition.x, objectMainPosition.y + 1 };
+	if (direction == RIGHT) {
+		position1.x += 1;
+		position2.x += 1;
+	}
+	while (!isLargeBoxReachWall(objectMainPosition, direction) && (moveBlock == 0 || isObjectOnIce(Object::LARGE_BOX, objectMainPosition))) {
+		objectMainPosition = GetOffsetPoint(objectMainPosition, direction);
+		position1 = GetOffsetPoint(position1, direction);
+		position2 = GetOffsetPoint(position2, direction);
+		for (Object& box : boxs) {
+			if (isPointInsideObject(box, position1) || isPointInsideObject(box, position2)) {
+				if (moveBlock != 0 && !isObjectOnIce(box.GetType(), box.GetGameboardPosition())) return moveBlock;
+				if (box.IsMoving() || moveObject(box, direction, moveBlock) == 0) return moveBlock;
+			}
+		}
+		moveBlock++;
+	}
+	return moveBlock;
+}
+
+int Level::getMoveLargeBoxBlockVertical(Object& object, Direction direction, int waitBlock) {
+	int moveBlock = 0;
+	POINT objectMainPosition = object.GetGameboardPosition();
+	POINT position1 = objectMainPosition;
+	POINT position2 = { objectMainPosition.x + 1, objectMainPosition.y };
+	if (direction == DOWN) {
+		position1.y += 1;
+		position2.y += 1;
+	}
+	while (!isLargeBoxReachWall(objectMainPosition, direction) && (moveBlock == 0 || isObjectOnIce(Object::LARGE_BOX, objectMainPosition))) {
+		objectMainPosition = GetOffsetPoint(objectMainPosition, direction);
+		position1 = GetOffsetPoint(position1, direction);
+		position2 = GetOffsetPoint(position2, direction);
+		for (Object& box : boxs) {
+			if (isPointInsideObject(box, position1) || isPointInsideObject(box, position2)) {
+				if (moveBlock != 0 && !isObjectOnIce(box.GetType(), box.GetGameboardPosition())) return moveBlock;
+				if (box.IsMoving() || moveObject(box, direction, moveBlock) == 0) return moveBlock;
+			}
+		}
+		moveBlock++;
+	}
+	return moveBlock;
+}
+
 bool Level::isObjectReachWall(Object& object, Direction direction) {
 	Object::Type type = object.GetType();
 	if (type == Object::BOB) return isBobReachWall(object.GetGameboardPosition(), direction);
@@ -396,6 +452,19 @@ bool Level::isMediumBoxReachWall(POINT position, Direction direction) {
 		return position.x == 0 || gameboard[position.x - 1][position.y] == 0;
 	} else if (direction == RIGHT) {
 		return position.x == gameboardWidth - 2 || gameboard[position.x + 2][position.y] == 0;
+	}
+	throw new runtime_error("Move direction wrong!");
+}
+
+bool Level::isLargeBoxReachWall(POINT position, Direction direction) {
+	if (direction == UP) {
+		return position.y == 0 || gameboard[position.x][position.y - 1] == 0 || gameboard[position.x + 1][position.y - 1] == 0;
+	} else if (direction == DOWN) {
+		return position.y == gameboardHeight - 2 || gameboard[position.x][position.y + 2] == 0 || gameboard[position.x + 1][position.y + 2] == 0;
+	} else if (direction == LEFT) {
+		return position.x == 0 || gameboard[position.x - 1][position.y] == 0 || gameboard[position.x - 1][position.y + 1] == 0;
+	} else if (direction == RIGHT) {
+		return position.x == gameboardWidth - 2 || gameboard[position.x + 2][position.y] == 0 || gameboard[position.x + 2][position.y + 1] == 0;
 	}
 	throw new runtime_error("Move direction wrong!");
 }

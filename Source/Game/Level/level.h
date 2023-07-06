@@ -72,8 +72,12 @@ private:
 	int getMoveMediumBoxBlock(Object &object, Direction direction, int waitBlock);
 	int getMoveMediumBoxBlockHorizontal(Object &object, Direction direction, int waitBlock);
 	int getMoveMediumBoxBlockVertical(Object &object, Direction direction, int waitBlock);
+	int getMoveLargeBoxBlock(Object &object, Direction direction, int waitBlock);
+	int getMoveLargeBoxBlockHorizontal(Object &object, Direction direction, int waitBlock);
+	int getMoveLargeBoxBlockVertical(Object &object, Direction direction, int waitBlock);
 	bool isObjectReachWall(Object &object, Direction direction);
 	bool isBobReachWall(POINT position, Direction direction);
 	bool isSmallBoxReachWall(POINT position, Direction direction);
 	bool isMediumBoxReachWall(POINT position, Direction direction);
+	bool isLargeBoxReachWall(POINT position, Direction direction);
 };
