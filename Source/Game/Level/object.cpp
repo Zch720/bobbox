@@ -33,7 +33,8 @@ bool Object::IsMoving() {
 	return moveStepCount != 0;
 }
 
-void Object::MoveUp(int block, bool smooth) {
+void Object::MoveUp(int block, int waitBlock, bool smooth) {
+	moveWaitCount = 6 * waitBlock;
 	moveStepCount = 6 * block;
 	moveDirection = UP;
 	gameboardPosition.y -= block;
@@ -43,7 +44,8 @@ void Object::MoveUp(int block, bool smooth) {
 	}
 }
 
-void Object::MoveDown(int block, bool smooth) {
+void Object::MoveDown(int block, int waitBlock, bool smooth) {
+	moveWaitCount = 6 * waitBlock;
 	moveStepCount = 6 * block;
 	moveDirection = DOWN;
 	gameboardPosition.y += block;
@@ -53,7 +55,8 @@ void Object::MoveDown(int block, bool smooth) {
 	}
 }
 
-void Object::MoveLeft(int block, bool smooth) {
+void Object::MoveLeft(int block, int waitBlock, bool smooth) {
+	moveWaitCount = 6 * waitBlock;
 	moveStepCount = 6 * block;
 	moveDirection = LEFT;
 	gameboardPosition.x -= block;
@@ -63,7 +66,8 @@ void Object::MoveLeft(int block, bool smooth) {
 	}
 }
 
-void Object::MoveRight(int block, bool smooth) {
+void Object::MoveRight(int block, int waitBlock, bool smooth) {
+	moveWaitCount = 6 * waitBlock;
 	moveStepCount = 6 * block;
 	moveDirection = RIGHT;
 	gameboardPosition.x += block;
@@ -85,6 +89,10 @@ int Object::getMoveDistence() {
 
 void Object::updateTexturePosition() {
 	if (moveStepCount == 0) return;
+	if (moveWaitCount != 0) {
+		moveWaitCount--;
+		return;
+	}
 
 	int left = texture.GetLeft();
 	int top = texture.GetTop();

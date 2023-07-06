@@ -30,10 +30,15 @@ void CGameStateRun::OnInit() {
 
 void CGameStateRun::OnMove() {
 	levelManager.Update();
+	if (levelManager.IsReachGoal()) {
+		levelManager.Clear();
+		GotoGameState(GAME_STATE_INIT);
+	}
 }
 
 void CGameStateRun::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags) {
 	if (nChar == VK_ESCAPE) {
+		levelManager.Clear();
 		GotoGameState(GAME_STATE_INIT);
 	} else if (nChar == VK_UP || nChar == 'W') {
 		levelManager.MoveUp();
@@ -43,8 +48,6 @@ void CGameStateRun::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags) {
 		levelManager.MoveLeft();
 	} else if (nChar == VK_RIGHT || nChar == 'D') {
 		levelManager.MoveRight();
-	} else {
-		GotoGameState(GAME_STATE_OVER);
 	}
 }
 

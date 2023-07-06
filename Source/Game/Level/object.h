@@ -20,10 +20,10 @@ public:
 	POINT GetGameboardPosition();
 
 	bool IsMoving();
-	void MoveUp(int block, bool smooth);
-	void MoveDown(int block, bool smooth);
-	void MoveLeft(int block, bool smooth);
-	void MoveRight(int block, bool smooth);
+	void MoveUp(int block, int waitBlock, bool smooth);
+	void MoveDown(int block, int waitBlock, bool smooth);
+	void MoveLeft(int block, int waitBlock, bool smooth);
+	void MoveRight(int block, int waitBlock, bool smooth);
 
 	void Show();
 
@@ -41,6 +41,7 @@ protected:
 	POINT gameboardPosition;
 
 private:
+	int moveWaitCount = 0;
 	int moveStepCount = 0;
 	Direction moveDirection = DIRECTION_NONE;
 

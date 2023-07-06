@@ -7,9 +7,11 @@
 class Level {
 public:
 	void Init();
+	void Clear();
 
 	void LoadLevel(int level);
 
+	bool IsReachGoal();
 	bool IsInsideGameboard(POINT position);
 
 	void MoveUp();
@@ -35,7 +37,14 @@ private:
 	std::vector<Object> holes;
 	std::vector<Object> boxs;
 
-	void moveObject(Object &object, Direction direction);
-	int getMoveBobBlock(Object &object, Direction direction);
+	bool isPointInsizObject(Object &object, POINT point);
+
+	POINT getBoxRealPosition(POINT origionPosition, POINT gameboardPosition);
+
+	int moveObject(Object &object, Direction direction, int waitBlock);
+	int getMoveBobBlock(Object &object, Direction direction, int waitBlcok);
+	int getMoveSmallBoxBlock(Object &object, Direction direction, int waitBlock);
+	bool isObjectReachWall(Object &object, Direction direction);
 	bool isBobReachWall(POINT position, Direction direction);
+	bool isSmallBoxReachWall(POINT position, Direction direction);
 };

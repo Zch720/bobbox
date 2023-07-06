@@ -46,8 +46,6 @@ void CGameStateInit::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags) {
 			if (currentLevel != -1) {
 				GotoGameState(GAME_STATE_RUN);
 			}
-		} else {
-			GotoGameState(GAME_STATE_OVER);
 		}
 	}
 }
