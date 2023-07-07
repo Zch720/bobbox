@@ -20,6 +20,9 @@
     <Filter Include="MyGame\util">
       <UniqueIdentifier>{94120b84-1aef-4ad0-8bc4-cb8c52dda6ff}</UniqueIdentifier>
     </Filter>
+    <Filter Include="MyGame\Level">
+      <UniqueIdentifier>{1df22dd5-f400-42ac-9d11-13f06f0f8920}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="RES\GAME.RC2">
@@ -69,6 +72,15 @@
     <ClCompile Include="Source\Game\util\button.cpp">
       <Filter>MyGame\util</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Game\Level\level.cpp">
+      <Filter>MyGame\Level</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Game\Level\object.cpp">
+      <Filter>MyGame\Level</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Game\util\direction.cpp">
+      <Filter>MyGame\util</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Library\audio.h">
@@ -111,6 +123,18 @@
       <Filter>MyGame\Layout</Filter>
     </ClInclude>
     <ClInclude Include="Source\Game\util\button.h">
+      <Filter>MyGame\util</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Game\Level\level.h">
+      <Filter>MyGame\Level</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Game\game_status.h">
+      <Filter>MyGame</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Game\Level\object.h">
+      <Filter>MyGame\Level</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Game\util\direction.h">
       <Filter>MyGame\util</Filter>
     </ClInclude>
   </ItemGroup>

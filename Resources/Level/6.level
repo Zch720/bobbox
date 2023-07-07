@@ -1,0 +1,28 @@
+#gameboard_size 7 5
+
+#texture_origin_position 445 196
+
+#gameboard
+0 0 1 1 1 1 1
+0 0 1 2 2 2 1
+2 2 2 2 0 2 1
+0 0 0 2 2 2 1
+0 0 0 0 1 1 1
+
+#goal 3
+6 0
+2 1
+6 4
+
+#bob 0 2
+
+#holes 0
+
+#small_box 3
+4 0
+6 1
+4 3
+
+#medium_box 0
+
+#large_box 0
