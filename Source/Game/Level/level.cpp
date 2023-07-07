@@ -8,6 +8,7 @@ std::vector<game_framework::CMovingBitmap> Level::levelBackgrounds = std::vector
 
 void Level::Init() {
 	Object::Init();
+	statusDisplay.Init();
 	for (int i = 0; i < 16; i++) {
 		levelBackgrounds[i].LoadBitmapByString({ RESOURCES_DIR + "background_" + to_string(i) + ".bmp" });
 	}
@@ -19,6 +20,7 @@ void Level::Clear() {
 	goals.clear();
 	holes.clear();
 	boxs.clear();
+	statusDisplay.LevelStatusClean();
 }
 
 void Level::LoadLevel(int level) {
@@ -176,6 +178,11 @@ void Level::Show() {
 		box.Show();
 	}
 	bob.Show();
+
+	statusDisplay.Show();
+	if (IsReachGoal() && !statusDisplay.IsShowing()) {
+		statusDisplay.StartClear();
+	}
 }
 
 bool Level::isPointInsideObject(Object& object, POINT point) {

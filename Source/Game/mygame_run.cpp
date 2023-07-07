@@ -22,6 +22,14 @@ void CGameStateRun::OnBeginState() {
 		gameType = LEVEL;
 		levelManager.LoadLevel(currentLevel);
 	}
+
+	if (lastLevel < 1) {
+		SwitchScene::OpenLeft();
+	} else {
+		SwitchScene::OpenRight();
+	}
+
+	lastLevel = currentLevel;
 }
 
 void CGameStateRun::OnInit() {
@@ -30,16 +38,22 @@ void CGameStateRun::OnInit() {
 
 void CGameStateRun::OnMove() {
 	levelManager.Update();
-	if (levelManager.IsReachGoal()) {
-		levelManager.Clear();
-		GotoGameState(GAME_STATE_INIT);
-	}
 }
 
 void CGameStateRun::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags) {
+	if (isSwitchingScene) return;
+
+	if (levelManager.IsReachGoal()) {
+		if (nChar == VK_RETURN && !SwitchScene::IsClosing()) {
+			isSwitchingScene = true;
+			SwitchScene::CloseRight();
+		}
+		return;
+	}
+
 	if (nChar == VK_ESCAPE) {
-		levelManager.Clear();
-		GotoGameState(GAME_STATE_INIT);
+		isSwitchingScene = true;
+		SwitchScene::CloseRight();
 	} else if (nChar == VK_UP || nChar == 'W') {
 		levelManager.MoveUp();
 	} else if (nChar == VK_DOWN || nChar == 'S') {
@@ -77,5 +91,18 @@ void CGameStateRun::OnRButtonUp(UINT nFlags, CPoint point) {
 void CGameStateRun::OnShow() {
 	if (gameType == LEVEL) {
 		levelManager.Show();
+	}
+
+	SwitchScene::Show();
+	if (isSwitchingScene && !SwitchScene::IsClosing()) {
+		bool reachGoal = levelManager.IsReachGoal();
+		levelManager.Clear();
+		isSwitchingScene = false;
+		if (reachGoal) {
+			currentLevel++;
+			GotoGameState(GAME_STATE_RUN);
+		} else {
+			GotoGameState(GAME_STATE_INIT);
+		}
 	}
 }

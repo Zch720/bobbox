@@ -10,12 +10,14 @@
 using namespace game_framework;
 
 int currentLevel = -1;
+int lastLevel = -1;
 
 CGameStateInit::CGameStateInit(CGame *g) : CGameState(g) {
 }
 
 void CGameStateInit::OnInit() {
 	ShowInitProgress(0, "Start Initialize...");
+	SwitchScene::Init();
 	startLayout.Init();
 	chooseLevelLayout.Init();
 	chooseLevelLayout.SetBackButtonOnClickFunc([this]() {
@@ -24,9 +26,15 @@ void CGameStateInit::OnInit() {
 }
 
 void CGameStateInit::OnBeginState() {
+	SwitchScene::OpenLeft();
+	lastLevel = -1;
+}
+
+void CGameStateInit::OnMove() {
 }
 
 void CGameStateInit::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags) {
+	if (isSwitchingScene) return;
 	if (!startLayoutShown) {
 		startLayoutShown = true;
 		chooseLevelLayout.Reset();
@@ -44,20 +52,25 @@ void CGameStateInit::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags) {
 		} else if (nChar == VK_RETURN) {
 			currentLevel = chooseLevelLayout.ChooseLevel();
 			if (currentLevel != -1) {
-				GotoGameState(GAME_STATE_RUN);
+				isSwitchingScene = true;
+				SwitchScene::CloseRight();
+				//GotoGameState(GAME_STATE_RUN);
 			}
 		}
 	}
 }
 
 void CGameStateInit::OnLButtonDown(UINT nFlags, CPoint point) {
+	if (isSwitchingScene) return;
 	if (!startLayoutShown) {
 		startLayoutShown = true;
 		chooseLevelLayout.Reset();
 	} else {
 		currentLevel = chooseLevelLayout.GetMouseClickLevelButton(point);
 		if (currentLevel != -1) {
-			GotoGameState(GAME_STATE_RUN);
+			isSwitchingScene = true;
+			SwitchScene::CloseRight();
+			//GotoGameState(GAME_STATE_RUN);
 		}
 	}
 }
@@ -73,5 +86,13 @@ void CGameStateInit::OnShow() {
 		chooseLevelLayout.Show();
 	} else {
 		startLayout.Show();
+	}
+	
+	SwitchScene::Show();
+	if (isSwitchingScene) {
+		if (!SwitchScene::IsClosing()) {
+			isSwitchingScene = false;
+			GotoGameState(GAME_STATE_RUN);
+		}
 	}
 }
