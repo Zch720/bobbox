@@ -43,6 +43,7 @@
 #include "Layout/start.h"
 #include "Layout/choose_level.h"
 #include "Level/level.h"
+#include "Level/story.h"
 
 namespace game_framework {
 
@@ -90,7 +91,13 @@ namespace game_framework {
 		
 		bool isSwitchingScene = false;
 		Type gameType;
+		Story storyManager;
 		Level levelManager;
+
+		void storyKeyInput(char nChar);
+		void levelKeyInput(char nChar);
+		void storyShow();
+		void levelShow();
 	};
 
 	class CGameStateOver : public CGameState {

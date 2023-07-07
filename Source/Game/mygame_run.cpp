@@ -16,8 +16,12 @@ CGameStateRun::~CGameStateRun() {
 }
 
 void CGameStateRun::OnBeginState() {
-	if (currentLevel == 0 || currentLevel == 17) {
+	if (currentLevel == 0) {
 		gameType = STORY;
+		storyManager.StartStoryBegin();
+	} else if (currentLevel == 17) {
+		gameType = STORY;
+		storyManager.StartStoryEnd();
 	} else {
 		gameType = LEVEL;
 		levelManager.LoadLevel(currentLevel);
@@ -37,10 +41,59 @@ void CGameStateRun::OnInit() {
 }
 
 void CGameStateRun::OnMove() {
-	levelManager.Update();
+	if (gameType == LEVEL) {
+		levelManager.Update();
+	}
 }
 
 void CGameStateRun::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags) {
+	if (gameType == STORY) {
+		storyKeyInput(nChar);
+	} else if (gameType == LEVEL) {
+		levelKeyInput(nChar);
+	}
+}
+
+void CGameStateRun::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags) {
+}
+
+void CGameStateRun::OnLButtonDown(UINT nFlags, CPoint point) {
+}
+
+void CGameStateRun::OnLButtonUp(UINT nFlags, CPoint point) {
+}
+
+void CGameStateRun::OnMouseMove(UINT nFlags, CPoint point) {
+}
+
+void CGameStateRun::OnRButtonDown(UINT nFlags, CPoint point) {
+}
+
+void CGameStateRun::OnRButtonUp(UINT nFlags, CPoint point) {
+}
+
+void CGameStateRun::OnShow() {
+	if (gameType == STORY) {
+		storyShow();
+	} else if (gameType == LEVEL) {
+		levelShow();
+	}
+}
+
+void CGameStateRun::storyKeyInput(char nChar) {
+	if (nChar == VK_SPACE) {
+		if (currentLevel == 0) {
+			currentLevel++;
+			GotoGameState(GAME_STATE_RUN);
+		} else {
+			GotoGameState(GAME_STATE_INIT);
+		}
+	} else if (nChar == VK_ESCAPE) {
+		GotoGameState(GAME_STATE_INIT);
+	}
+}
+
+void CGameStateRun::levelKeyInput(char nChar) {
 	if (isSwitchingScene) return;
 
 	if (levelManager.IsReachGoal()) {
@@ -70,28 +123,25 @@ void CGameStateRun::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags) {
 	}
 }
 
-void CGameStateRun::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags) {
-}
+void  CGameStateRun::storyShow() {
+	if (!storyManager.IsShowing()) return;
 
-void CGameStateRun::OnLButtonDown(UINT nFlags, CPoint point) {
-}
-
-void CGameStateRun::OnLButtonUp(UINT nFlags, CPoint point) {
-}
-
-void CGameStateRun::OnMouseMove(UINT nFlags, CPoint point) {
-}
-
-void CGameStateRun::OnRButtonDown(UINT nFlags, CPoint point) {
-}
-
-void CGameStateRun::OnRButtonUp(UINT nFlags, CPoint point) {
-}
-
-void CGameStateRun::OnShow() {
-	if (gameType == LEVEL) {
-		levelManager.Show();
+	CDC *pDC = CDDraw::GetBackCDC();
+	storyManager.ShowText(pDC);
+	CDDraw::ReleaseBackCDC();
+	
+	if (!storyManager.IsShowing()) {
+		if (currentLevel == 0) {
+			currentLevel++;
+			GotoGameState(GAME_STATE_RUN);
+		} else {
+			GotoGameState(GAME_STATE_INIT);
+		}
 	}
+}
+
+void  CGameStateRun::levelShow() {
+	levelManager.Show();
 
 	SwitchScene::Show();
 	if (isSwitchingScene && !SwitchScene::IsClosing()) {
