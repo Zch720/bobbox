@@ -16,6 +16,7 @@ void Level::Init() {
 
 void Level::Clear() {
 	while (!moveBuffer.empty()) moveBuffer.pop();
+	while (!undos.empty()) undos.pop();
 	gameboard.clear();
 	goals.clear();
 	holes.clear();
@@ -287,7 +288,7 @@ int Level::moveObject(Object &object, Direction direction, int waitBlock) {
 	undoInfo.objectType = object.GetType();
 	undoInfo.objectFinalPosition = object.GetGameboardPosition();
 	undoInfo.moveBlock = moveBlock;
-	undoBuffer.push_back(undoInfo);
+	if (moveBlock != 0) undoBuffer.push_back(undoInfo);
 	return moveBlock;
 }
 
