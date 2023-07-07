@@ -4,6 +4,7 @@
 #include <stack>
 #include "../../Library/gameutil.h"
 #include "object.h"
+#include "level_status_animation.h"
 
 class Level {
 public:
@@ -44,8 +45,10 @@ private:
 	static std::vector<game_framework::CMovingBitmap> levelBackgrounds;
 
 	queue<Direction> moveBuffer;
+	LevelStatusDisplay statusDisplay;
 
 	game_framework::CMovingBitmap background;
+	
 
 	int gameboardWidth = 0, gameboardHeight = 0;
 	std::vector<std::vector<int>> gameboard;

@@ -39,6 +39,7 @@
 */
 
 #include "game_status.h"
+#include "switch_scene.h"
 #include "Layout/start.h"
 #include "Layout/choose_level.h"
 #include "Level/level.h"
@@ -54,9 +55,11 @@ namespace game_framework {
 		void OnLButtonDown(UINT nFlags, CPoint point);
 		void OnMouseMove(UINT nFlags, CPoint point);
 	protected:
+		void OnMove();
 		void OnShow();
 	private:
 		bool startLayoutShown = false;
+		bool isSwitchingScene = false;
 
 		CMovingBitmap logo;
 		StartLayout startLayout;
@@ -84,7 +87,8 @@ namespace game_framework {
 			STORY,
 			LEVEL
 		};
-
+		
+		bool isSwitchingScene = false;
 		Type gameType;
 		Level levelManager;
 	};
