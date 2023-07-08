@@ -34,6 +34,8 @@ bool Object::IsMoving() {
 }
 
 void Object::MoveUp(int block, int waitBlock, bool smooth) {
+	while(moveStepCount) updateTexturePosition();
+	
 	moveWaitCount = 6 * waitBlock;
 	moveStepCount = 6 * block;
 	moveDirection = UP;
@@ -45,6 +47,8 @@ void Object::MoveUp(int block, int waitBlock, bool smooth) {
 }
 
 void Object::MoveDown(int block, int waitBlock, bool smooth) {
+	while(moveStepCount) updateTexturePosition();
+	
 	moveWaitCount = 6 * waitBlock;
 	moveStepCount = 6 * block;
 	moveDirection = DOWN;
@@ -56,6 +60,8 @@ void Object::MoveDown(int block, int waitBlock, bool smooth) {
 }
 
 void Object::MoveLeft(int block, int waitBlock, bool smooth) {
+	while(moveStepCount) updateTexturePosition();
+	
 	moveWaitCount = 6 * waitBlock;
 	moveStepCount = 6 * block;
 	moveDirection = LEFT;
@@ -67,6 +73,8 @@ void Object::MoveLeft(int block, int waitBlock, bool smooth) {
 }
 
 void Object::MoveRight(int block, int waitBlock, bool smooth) {
+	while(moveStepCount) updateTexturePosition();
+	
 	moveWaitCount = 6 * waitBlock;
 	moveStepCount = 6 * block;
 	moveDirection = RIGHT;
