@@ -96,17 +96,10 @@ bool Level::IsReachGoal() {
 	if (goals.size() == 0) return false;
 
 	int reachCount = 0;
-	for (POINT goal : goals) {
-		for (Object& box : boxs) {
-			if (isPointInsideObject(box, goal)) reachCount++;
-		}
+	for (Object& box : boxs) {
+		if (isBoxOnGoal(box)) reachCount++;
 	}
-	return reachCount == goals.size();
-}
-
-bool Level::IsInsideGameboard(POINT position) {
-	return -1 < position.x && position.x < gameboardWidth
-		&& -1 < position.y && position.y < gameboardHeight;
+	return reachCount == boxs.size();
 }
 
 void Level::SetBackButtonOnClick(Button::OnClickFunc func) {
@@ -208,13 +201,12 @@ void Level::Update() {
 		moveObject(bob, RIGHT, 0);
 	}
 	checkHoleFill();
+	checkIsDead();
 
 	if (undoBuffer.size() != 0) {
 		AudioPlayer::PlayWalkSound();
 		undos.push(undoBuffer);
 	}
-
-	checkIsDead();
 }
 
 void Level::Show() {
@@ -254,16 +246,16 @@ void Level::checkIsDead() {
 	checkedMovableBox.clear();
 	for (Object& box : boxs) {
 		if (isBoxSideReachable(box, UP)) {
-			checkBoxMovableWithDirection(box, DOWN);
+			checkBoxMovable(box, DOWN);
 		}
 		if (isBoxSideReachable(box, DOWN)) {
-			checkBoxMovableWithDirection(box, UP);
+			checkBoxMovable(box, UP);
 		}
 		if (isBoxSideReachable(box, LEFT)) {
-			checkBoxMovableWithDirection(box, RIGHT);
+			checkBoxMovable(box, RIGHT);
 		}
 		if (isBoxSideReachable(box, RIGHT)) {
-			checkBoxMovableWithDirection(box, LEFT);
+			checkBoxMovable(box, LEFT);
 		}
 	}
 
@@ -292,57 +284,38 @@ void Level::findReachableBlock() {
 		blockReachable[position.x][position.y] = true;
 
 		offsetPotition = GetOffsetPoint(position, UP);
-		if (IsInsideGameboard(offsetPotition) && gameboard[offsetPotition.x][offsetPotition.y] != 0 && isBlockEmpty(offsetPotition)) {
+		if (isPointInsideGameboard(offsetPotition) && gameboard[offsetPotition.x][offsetPotition.y] != 0 && isBlockEmpty(offsetPotition)) {
 			dfsFindReachable.push(offsetPotition);
 		}
 		offsetPotition = GetOffsetPoint(position, DOWN);
-		if (IsInsideGameboard(offsetPotition) && gameboard[offsetPotition.x][offsetPotition.y] != 0 && isBlockEmpty(offsetPotition)) {
+		if (isPointInsideGameboard(offsetPotition) && gameboard[offsetPotition.x][offsetPotition.y] != 0 && isBlockEmpty(offsetPotition)) {
 			dfsFindReachable.push(offsetPotition);
 		}
 		offsetPotition = GetOffsetPoint(position, LEFT);
-		if (IsInsideGameboard(offsetPotition) && gameboard[offsetPotition.x][offsetPotition.y] != 0 && isBlockEmpty(offsetPotition)) {
+		if (isPointInsideGameboard(offsetPotition) && gameboard[offsetPotition.x][offsetPotition.y] != 0 && isBlockEmpty(offsetPotition)) {
 			dfsFindReachable.push(offsetPotition);
 		}
 		offsetPotition = GetOffsetPoint(position, RIGHT);
-		if (IsInsideGameboard(offsetPotition) && gameboard[offsetPotition.x][offsetPotition.y] != 0 && isBlockEmpty(offsetPotition)) {
+		if (isPointInsideGameboard(offsetPotition) && gameboard[offsetPotition.x][offsetPotition.y] != 0 && isBlockEmpty(offsetPotition)) {
 			dfsFindReachable.push(offsetPotition);
 		}
 	}
 }
 
-bool Level::checkBoxMovableWithDirection(Object& object, Direction direction) {
-	for (MoveableInfo moveableInfo : checkedMovableBox) {
-		POINT boxPosition = object.GetGameboardPosition();
-		if (moveableInfo.position.x == boxPosition.x && moveableInfo.position.y == boxPosition.y) {
-			if (direction == UP && moveableInfo.up) return true;
-			if (direction == DOWN && moveableInfo.down) return true;
-			if (direction == LEFT && moveableInfo.left) return true;
-			if (direction == RIGHT && moveableInfo.right) return true;
-		}
-	}
+bool Level::checkBoxMovable(Object& object, Direction direction) {
+	if (isBoxAlreadyMoveable(object, direction)) return true;
 	if (isObjectReachWall(object.GetType(), object.GetGameboardPosition(), direction)) return false;
 
 	std::vector<POINT> boxSidePositions = getObjectSidePositions(object.GetType(), object.GetGameboardPosition(), direction);
 	for (Object& box : boxs) {
 		for (POINT sidePosition : boxSidePositions) {
 			if (isPointInsideObject(box, sidePosition)) {
-				if (!checkBoxMovableWithDirection(box, direction)) return false;
+				if (!checkBoxMovable(box, direction)) return false;
 			}
 		}
 	}
 
-	int infoIndex = -1;
-	for (size_t i = 0; i < checkedMovableBox.size(); i++) {
-		if (checkedMovableBox[i].position.x == object.GetGameboardPosition().x && checkedMovableBox[i].position.y == object.GetGameboardPosition().y) {
-			infoIndex = i;
-			break;
-		}
-	}
-	if (infoIndex == -1) {
-		checkedMovableBox.push_back({});
-		infoIndex = checkedMovableBox.size() - 1;
-		checkedMovableBox[infoIndex].position = object.GetGameboardPosition();
-	}
+	int infoIndex = getBoxIndexInMoveableInfos(object);
 	if (direction == UP) checkedMovableBox[infoIndex].up = true;
 	if (direction == DOWN) checkedMovableBox[infoIndex].down = true;
 	if (direction == LEFT) checkedMovableBox[infoIndex].left = true;
@@ -350,50 +323,45 @@ bool Level::checkBoxMovableWithDirection(Object& object, Direction direction) {
 	return true;
 }
 
-bool Level::isBoxSideReachable(Object& object, Direction direction) {
-	Object::Type type = object.GetType();
-	if (type == Object::SMALL_BOX) {
-		POINT position = object.GetGameboardPosition();
-		position = GetOffsetPoint(position, direction);
-		return isBlockReachable(position);
-	}
-	if (type == Object::MEDIUM_BOX) {
-		if (direction == LEFT || direction == RIGHT) {
-			POINT position = object.GetGameboardPosition();
-			if (direction == RIGHT) position = GetOffsetPoint(position, RIGHT);
-			position = GetOffsetPoint(position, direction);
-			return isBlockReachable(position);
-		} else {
-			POINT position1 = object.GetGameboardPosition();
-			POINT position2 = GetOffsetPoint(position1, RIGHT);
-			position1 = GetOffsetPoint(position1, direction);
-			position2 = GetOffsetPoint(position2, direction);
-			return isBlockReachable(position1) || isBlockReachable(position2);
+bool Level::isBoxAlreadyMoveable(Object& box, Direction direction) {
+	for (MoveableInfo moveableInfo : checkedMovableBox) {
+		POINT boxPosition = box.GetGameboardPosition();
+		if (moveableInfo.position.x == boxPosition.x && moveableInfo.position.y == boxPosition.y) {
+			if (direction == UP && moveableInfo.up) return true;
+			if (direction == DOWN && moveableInfo.down) return true;
+			if (direction == LEFT && moveableInfo.left) return true;
+			if (direction == RIGHT && moveableInfo.right) return true;
 		}
 	}
-	if (type == Object::LARGE_BOX) {
-		POINT position1 = object.GetGameboardPosition();
-		POINT position2;
-		if (direction == LEFT) {
-			position2 = GetOffsetPoint(position1, DOWN);
-		} else if (direction == RIGHT) {
-			position1 = GetOffsetPoint(position1, RIGHT);
-			position2 = GetOffsetPoint(position1, DOWN);
-		} else if (direction == UP) {
-			position2 = GetOffsetPoint(position1, RIGHT);
-		} else if (direction == DOWN) {
-			position1 = GetOffsetPoint(position1, DOWN);
-			position2 = GetOffsetPoint(position1, RIGHT);
+	return false;
+}
+
+int Level::getBoxIndexInMoveableInfos(Object &box) {
+	for (size_t i = 0; i < checkedMovableBox.size(); i++) {
+		POINT boxPosition = box.GetGameboardPosition();
+		if (checkedMovableBox[i].position.x == boxPosition.x && checkedMovableBox[i].position.y == boxPosition.y) {
+			return i;
 		}
-		position1 = GetOffsetPoint(position1, direction);
-		position2 = GetOffsetPoint(position2, direction);
-		return isBlockReachable(position1) || isBlockReachable(position2);
+	}
+	checkedMovableBox.push_back({ box.GetGameboardPosition(), false, false, false, false });
+	return checkedMovableBox.size() - 1;
+}
+
+bool Level::isPointInsideGameboard(POINT position) {
+	return -1 < position.x && position.x < gameboardWidth
+		&& -1 < position.y && position.y < gameboardHeight;
+}
+
+bool Level::isBoxSideReachable(Object& box, Direction direction) {
+	std::vector<POINT> sidePositions = getObjectSidePositions(box.GetType(), box.GetGameboardPosition(), direction);
+	for (POINT position : sidePositions) {
+		if (isBlockReachable(position)) return true;
 	}
 	return false;
 }
 
 bool Level::isBlockReachable(POINT position) {
-	return IsInsideGameboard(position) && blockReachable[position.x][position.y];
+	return isPointInsideGameboard(position) && blockReachable[position.x][position.y];
 }
 
 bool Level::isBlockEmpty(POINT position) {
@@ -432,7 +400,7 @@ bool Level::isBoxOnGoal(Object& box) {
 	if (box.GetType() == Object::SMALL_BOX) return count == 1;
 	if (box.GetType() == Object::MEDIUM_BOX) return count == 2;
 	if (box.GetType() == Object::LARGE_BOX) return count == 4;
-	return false;
+	throw new runtime_error("Object type wrong!");
 }
 
 bool Level::isObjectOnIce(Object::Type type, POINT position) {
@@ -576,7 +544,7 @@ int Level::getObjectMoveBlock(Object& object, Direction direction, int waitBlock
 bool Level::isObjectReachWall(Object::Type type, POINT position, Direction direction) {
 	std::vector<POINT> sidePositions = getObjectSidePositions(type, position, direction);
 	for (POINT position : sidePositions) {
-		if (!IsInsideGameboard(position) || gameboard[position.x][position.y] == 0) return true;
+		if (!isPointInsideGameboard(position) || gameboard[position.x][position.y] == 0) return true;
 	}
 	if (type == Object::BOB) return isPointOnHoles(GetOffsetPoint(position, direction));
 	return false;

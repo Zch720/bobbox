@@ -15,7 +15,6 @@ public:
 	void LoadLevel(int level);
 
 	bool IsReachGoal();
-	bool IsInsideGameboard(POINT position);
 
 	void SetBackButtonOnClick(Button::OnClickFunc func);
 	void SetMusicButtonOnClick(Button::OnClickFunc func);
@@ -84,8 +83,11 @@ private:
 	void checkIsDead();
 	void findReachableBlock();
 
-	bool checkBoxMovableWithDirection(Object &box, Direction direction);
-
+	bool checkBoxMovable(Object &box, Direction direction);
+	bool isBoxAlreadyMoveable(Object &box, Direction direction);
+	int getBoxIndexInMoveableInfos(Object &box);
+	
+	bool isPointInsideGameboard(POINT position);
 	bool isBoxSideReachable(Object &object, Direction direction);
 	bool isBlockReachable(POINT position);
 	bool isBlockEmpty(POINT position);
