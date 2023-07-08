@@ -101,11 +101,14 @@ void CGameStateRun::storyKeyInput(char nChar) {
 	if (nChar == VK_SPACE) {
 		if (currentLevel == 0) {
 			currentLevel++;
+			AudioPlayer::PlayTransitionSound();
 			GotoGameState(GAME_STATE_RUN);
 		} else {
+			AudioPlayer::PlayTransitionSound();
 			GotoGameState(GAME_STATE_INIT);
 		}
 	} else if (nChar == VK_ESCAPE) {
+		AudioPlayer::PlayTransitionSound();
 		GotoGameState(GAME_STATE_INIT);
 	}
 }
@@ -153,8 +156,10 @@ void  CGameStateRun::storyShow() {
 	if (!storyManager.IsShowing()) {
 		if (currentLevel == 0) {
 			currentLevel++;
+			AudioPlayer::PlayTransitionSound();
 			GotoGameState(GAME_STATE_RUN);
 		} else {
+			AudioPlayer::PlayTransitionSound();
 			GotoGameState(GAME_STATE_INIT);
 		}
 	}
