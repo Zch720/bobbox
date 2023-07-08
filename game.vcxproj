@@ -243,6 +243,7 @@
     <ClCompile Include="Source\Core\StdAfx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Source\Game\audio_player.cpp" />
     <ClCompile Include="Source\Game\Layout\choose_level.cpp" />
     <ClCompile Include="Source\Game\Layout\start.cpp" />
     <ClCompile Include="Source\Game\Level\level.cpp" />
@@ -268,6 +269,7 @@
     <ClInclude Include="Source\Core\MainFrm.h" />
     <ClInclude Include="Source\Core\Resource.h" />
     <ClInclude Include="Source\Core\StdAfx.h" />
+    <ClInclude Include="Source\Game\audio_player.h" />
     <ClInclude Include="Source\Game\config.h" />
     <ClInclude Include="Source\Game\game_status.h" />
     <ClInclude Include="Source\Game\Layout\choose_level.h" />
