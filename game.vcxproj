@@ -248,6 +248,7 @@
     <ClCompile Include="Source\Game\Level\level.cpp" />
     <ClCompile Include="Source\Game\Level\level_status_animation.cpp" />
     <ClCompile Include="Source\Game\Level\object.cpp" />
+    <ClCompile Include="Source\Game\Level\story.cpp" />
     <ClCompile Include="Source\Game\mygame_initialize.cpp" />
     <ClCompile Include="Source\Game\mygame_over.cpp" />
     <ClCompile Include="Source\Game\mygame_run.cpp" />
@@ -274,6 +275,7 @@
     <ClInclude Include="Source\Game\Level\level.h" />
     <ClInclude Include="Source\Game\Level\level_status_animation.h" />
     <ClInclude Include="Source\Game\Level\object.h" />
+    <ClInclude Include="Source\Game\Level\story.h" />
     <ClInclude Include="Source\Game\mygame.h" />
     <ClInclude Include="Source\Game\switch_scene.h" />
     <ClInclude Include="Source\Game\util\button.h" />
