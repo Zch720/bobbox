@@ -5,6 +5,7 @@
 #include "../../Library/gameutil.h"
 #include "object.h"
 #include "level_status_animation.h"
+#include "../util/button.h"
 
 class Level {
 public:
@@ -15,6 +16,11 @@ public:
 
 	bool IsReachGoal();
 	bool IsInsideGameboard(POINT position);
+
+	void SetBackButtonOnClick(Button::OnClickFunc func);
+	void SetMusicButtonOnClick(Button::OnClickFunc func);
+	void SetSoundButtonOnClick(Button::OnClickFunc func);
+	void CheckMouseClick(POINT point);
 
 	void MoveUp();
 	void MoveDown();
@@ -48,7 +54,9 @@ private:
 	LevelStatusDisplay statusDisplay;
 
 	game_framework::CMovingBitmap background;
-	
+	Button backButton;
+	Button musicButton;
+	Button soundButton;
 
 	int gameboardWidth = 0, gameboardHeight = 0;
 	std::vector<std::vector<int>> gameboard;

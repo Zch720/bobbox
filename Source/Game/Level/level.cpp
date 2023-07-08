@@ -12,6 +12,12 @@ void Level::Init() {
 	for (int i = 0; i < 16; i++) {
 		levelBackgrounds[i].LoadBitmapByString({ RESOURCES_DIR + "background_" + to_string(i) + ".bmp" });
 	}
+	backButton.LoadBitmapByString({ RESOURCES_DIR + "back.bmp" });
+	backButton.SetTopLeft(20, 20);
+	musicButton.LoadBitmapByString({ RESOURCES_DIR + "music_on.bmp", RESOURCES_DIR + "music_off.bmp" });
+	musicButton.SetTopLeft(1374, 20);
+	soundButton.LoadBitmapByString({ RESOURCES_DIR + "sound_on.bmp", RESOURCES_DIR + "sound_off.bmp" });
+	soundButton.SetTopLeft(1445, 20);
 }
 
 void Level::Clear() {
@@ -98,6 +104,29 @@ bool Level::IsInsideGameboard(POINT position) {
 		&& -1 < position.y && position.y < gameboardHeight;
 }
 
+void Level::SetBackButtonOnClick(Button::OnClickFunc func) {
+	backButton.SetOnClickFunc(func);
+}
+
+void Level::SetMusicButtonOnClick(Button::OnClickFunc func) {
+	musicButton.SetOnClickFunc([this, func]() {
+		musicButton.SetFrameIndexOfBitmap(musicButton.GetFrameIndexOfBitmap() ^ 1);
+		func();
+	});
+}
+void Level::SetSoundButtonOnClick(Button::OnClickFunc func) {
+	soundButton.SetOnClickFunc([this, func]() {
+		soundButton.SetFrameIndexOfBitmap(soundButton.GetFrameIndexOfBitmap() ^ 1);
+		func();
+	});
+}
+
+void Level::CheckMouseClick(POINT point) {
+	backButton.CheckMouseClick(point);
+	musicButton.CheckMouseClick(point);
+	soundButton.CheckMouseClick(point);
+}
+
 void Level::MoveUp() {
 	moveBuffer.push(UP);
 }
@@ -179,6 +208,10 @@ void Level::Show() {
 		box.Show();
 	}
 	bob.Show();
+
+	backButton.ShowBitmap();
+	musicButton.ShowBitmap();
+	soundButton.ShowBitmap();
 
 	statusDisplay.Show();
 	if (IsReachGoal() && !statusDisplay.IsShowing()) {

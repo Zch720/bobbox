@@ -38,6 +38,12 @@ void CGameStateRun::OnBeginState() {
 
 void CGameStateRun::OnInit() {
 	levelManager.Init();
+	levelManager.SetBackButtonOnClick([this]() {
+		isSwitchingScene = true;
+		SwitchScene::CloseRight();
+	});
+	levelManager.SetMusicButtonOnClick([]() {});
+	levelManager.SetSoundButtonOnClick([]() {});
 }
 
 void CGameStateRun::OnMove() {
@@ -58,6 +64,7 @@ void CGameStateRun::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags) {
 }
 
 void CGameStateRun::OnLButtonDown(UINT nFlags, CPoint point) {
+	levelManager.CheckMouseClick(point);
 }
 
 void CGameStateRun::OnLButtonUp(UINT nFlags, CPoint point) {
