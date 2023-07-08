@@ -42,8 +42,17 @@ void CGameStateRun::OnInit() {
 		isSwitchingScene = true;
 		SwitchScene::CloseRight();
 	});
-	levelManager.SetMusicButtonOnClick([]() {});
-	levelManager.SetSoundButtonOnClick([]() {});
+	levelManager.SetMusicButtonOnClick([]() {
+		AudioPlayer::SwitchMusicOnOff();
+		if (AudioPlayer::GetMusicOnOff()) {
+			AudioPlayer::PlayBGM();
+		} else {
+			AudioPlayer::StopBGM();
+		}
+	});
+	levelManager.SetSoundButtonOnClick([]() {
+		AudioPlayer::SwitchSoundOnOff();
+	});
 }
 
 void CGameStateRun::OnMove() {
@@ -106,6 +115,7 @@ void CGameStateRun::levelKeyInput(char nChar) {
 	if (levelManager.IsReachGoal()) {
 		if (nChar == VK_RETURN && !SwitchScene::IsClosing()) {
 			isSwitchingScene = true;
+			AudioPlayer::PlayTransitionSound();
 			SwitchScene::CloseRight();
 		}
 		return;
@@ -113,6 +123,7 @@ void CGameStateRun::levelKeyInput(char nChar) {
 
 	if (nChar == VK_ESCAPE) {
 		isSwitchingScene = true;
+		AudioPlayer::PlayTransitionSound();
 		SwitchScene::CloseRight();
 	} else if (nChar == VK_UP || nChar == 'W') {
 		levelManager.MoveUp();

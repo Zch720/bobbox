@@ -23,6 +23,8 @@ void CGameStateInit::OnInit() {
 	chooseLevelLayout.SetBackButtonOnClickFunc([this]() {
 		startLayoutShown = false;
 	});
+	AudioPlayer::Init();
+	AudioPlayer::PlayBGM();
 }
 
 void CGameStateInit::OnBeginState() {
@@ -53,8 +55,8 @@ void CGameStateInit::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags) {
 			currentLevel = chooseLevelLayout.ChooseLevel();
 			if (currentLevel != -1) {
 				isSwitchingScene = true;
+				AudioPlayer::PlayTransitionSound();
 				SwitchScene::CloseRight();
-				//GotoGameState(GAME_STATE_RUN);
 			}
 		}
 	}
@@ -69,8 +71,8 @@ void CGameStateInit::OnLButtonDown(UINT nFlags, CPoint point) {
 		currentLevel = chooseLevelLayout.GetMouseClickLevelButton(point);
 		if (currentLevel != -1) {
 			isSwitchingScene = true;
+			AudioPlayer::PlayTransitionSound();
 			SwitchScene::CloseRight();
-			//GotoGameState(GAME_STATE_RUN);
 		}
 	}
 }

@@ -40,6 +40,7 @@
 
 #include "game_status.h"
 #include "switch_scene.h"
+#include "audio_player.h"
 #include "Layout/start.h"
 #include "Layout/choose_level.h"
 #include "Level/level.h"

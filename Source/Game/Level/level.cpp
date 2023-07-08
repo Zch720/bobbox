@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "level.h"
+#include "../audio_player.h"
 #include <string>
 #include <fstream>
 
@@ -168,6 +169,8 @@ void Level::Undo() {
 		}
 		if (i == 0) break;
 	}
+
+	AudioPlayer::PlayWalkSound();
 }
 
 void Level::Update() {
@@ -189,8 +192,10 @@ void Level::Update() {
 	}
 	checkHoleFill();
 
-	if (undoBuffer.size() != 0)
+	if (undoBuffer.size() != 0) {
+		AudioPlayer::PlayWalkSound();
 		undos.push(undoBuffer);
+	}
 }
 
 void Level::Show() {
@@ -215,6 +220,7 @@ void Level::Show() {
 
 	statusDisplay.Show();
 	if (IsReachGoal() && !statusDisplay.IsShowing()) {
+		AudioPlayer::PlayClearSound();
 		statusDisplay.StartClear();
 	}
 }
