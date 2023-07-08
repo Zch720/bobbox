@@ -320,9 +320,9 @@ bool Level::checkBoxMovableWithDirection(Object& object, Direction direction) {
 			if (direction == RIGHT && moveableInfo.right) return true;
 		}
 	}
-	if (isObjectReachWall(object, direction)) return false;
+	if (isObjectReachWall(object.GetType(), object.GetGameboardPosition(), direction)) return false;
 
-	std::vector<POINT> boxSidePositions = getBoxSidePositions(object, direction);
+	std::vector<POINT> boxSidePositions = getObjectSidePositions(object.GetType(), object.GetGameboardPosition(), direction);
 	for (Object& box : boxs) {
 		for (POINT sidePosition : boxSidePositions) {
 			if (isPointInsideObject(box, sidePosition)) {
@@ -462,7 +462,7 @@ void Level::checkHoleFill() {
 			if (holePosition.x == boxPosition.x && holePosition.y == boxPosition.y) {
 				filledObjectBuffer.push_back(holes[holeIndex]);
 				filledObjectBuffer.push_back(boxs[boxIndex]);
-				UndoInfo undoInfo;
+				UndoInfo undoInfo = {};
 				undoInfo.type = UNDO_FILL;
 				undoBuffer.push_back(undoInfo);
 
@@ -490,22 +490,24 @@ Object& Level::findObjectAtPosition(Object::Type type, POINT position) {
 	throw runtime_error("can not find object at point(" + to_string(position.x) + ", " + to_string(position.y) + ")");
 }
 
-std::vector<POINT> Level::getBoxSidePositions(Object& box, Direction direction) {
+std::vector<POINT> Level::getObjectSidePositions(Object::Type type, POINT objectPosition, Direction direction) {
 	std::vector<POINT> result;
-	Object::Type type = box.GetType();
+	if (type == Object::BOB) {
+		result.push_back(GetOffsetPoint(objectPosition, direction));
+	}
 	if (type == Object::SMALL_BOX) {
-		result.push_back(GetOffsetPoint(box.GetGameboardPosition(), direction));
+		result.push_back(GetOffsetPoint(objectPosition, direction));
 	} else if (type == Object::MEDIUM_BOX) {
 		if (direction == LEFT) {
-			result.push_back(GetOffsetPoint(box.GetGameboardPosition(), direction));
+			result.push_back(GetOffsetPoint(objectPosition, direction));
 		} else if (direction == RIGHT) {
-			result.push_back(GetOffsetPoint(GetOffsetPoint(box.GetGameboardPosition(), RIGHT), direction));
+			result.push_back(GetOffsetPoint(GetOffsetPoint(objectPosition, RIGHT), direction));
 		} else {
-			result.push_back(GetOffsetPoint(box.GetGameboardPosition(), direction));
-			result.push_back(GetOffsetPoint(GetOffsetPoint(box.GetGameboardPosition(), RIGHT), direction));
+			result.push_back(GetOffsetPoint(objectPosition, direction));
+			result.push_back(GetOffsetPoint(GetOffsetPoint(objectPosition, RIGHT), direction));
 		}
 	} else if (type == Object::LARGE_BOX) {
-		POINT position1 = box.GetGameboardPosition();
+		POINT position1 = objectPosition;
 		POINT position2;
 		if (direction == LEFT) {
 			position2 = GetOffsetPoint(position1, DOWN);
@@ -527,17 +529,7 @@ std::vector<POINT> Level::getBoxSidePositions(Object& box, Direction direction) 
 }
 
 int Level::moveObject(Object& object, Direction direction, int waitBlock) {
-	int moveBlock = 0;
-	Object::Type type = object.GetType();
-	if (type == Object::BOB) {
-		moveBlock = getMoveBobBlock(object, direction, waitBlock);
-	} else if (type == Object::SMALL_BOX) {
-		moveBlock = getMoveSmallBoxBlock(object, direction, waitBlock);
-	} else if (type == Object::MEDIUM_BOX) {
-		moveBlock = getMoveMediumBoxBlock(object, direction, waitBlock);
-	} else if (type == Object::LARGE_BOX) {
-		moveBlock = getMoveLargeBoxBlock(object, direction, waitBlock);
-	}
+	int moveBlock = getObjectMoveBlock(object, direction, waitBlock);
 
 	UndoInfo undoInfo = {};
 	if (direction == UP) {
@@ -560,190 +552,40 @@ int Level::moveObject(Object& object, Direction direction, int waitBlock) {
 	return moveBlock;
 }
 
-int Level::getMoveBobBlock(Object &object, Direction direction, int waitBlock) {
+int Level::getObjectMoveBlock(Object& object, Direction direction, int waitBlock) {
 	int moveBlock = 0;
-	POINT position = object.GetGameboardPosition();
-	while (!isBobReachWall(position, direction) && (moveBlock == 0 || isObjectOnIce(Object::BOB, position))) {
-		position = GetOffsetPoint(position, direction);
+	Object::Type objectType = object.GetType();
+	POINT objectPosition = object.GetGameboardPosition();
+	std::vector<POINT> sidePositions;
+	while (!isObjectReachWall(objectType, objectPosition, direction) && (moveBlock == 0 || isObjectOnIce(objectType, objectPosition))) {
+		sidePositions = getObjectSidePositions(objectType, objectPosition, direction);
 		for (Object& box : boxs) {
-			if (isPointInsideObject(box, position)) {
-				if (moveBlock != 0 && !isObjectOnIce(box.GetType(), box.GetGameboardPosition())) return moveBlock;
-				if (box.IsMoving() || moveObject(box, direction, moveBlock) == 0) return moveBlock;
+			for (POINT position : sidePositions) {
+				if (isPointInsideObject(box, position)) {
+					if (moveBlock != 0 && !isObjectOnIce(box.GetType(), box.GetGameboardPosition())) return moveBlock;
+					if (box.IsMoving() || moveObject(box, direction, moveBlock + waitBlock) == 0) return moveBlock;
+				}
 			}
 		}
+		objectPosition = GetOffsetPoint(objectPosition, direction);
 		moveBlock++;
 	}
 	return moveBlock;
 }
 
-int Level::getMoveSmallBoxBlock(Object &object, Direction direction, int waitBlock) {
-	int moveBlock = 0;
-	POINT position = object.GetGameboardPosition();
-	while (!isSmallBoxReachWall(position, direction) && (moveBlock == 0 || isObjectOnIce(Object::SMALL_BOX, position))) {
-		position = GetOffsetPoint(position, direction);
-		for (Object& box : boxs) {
-			if (isPointInsideObject(box, position)) {
-				if (moveBlock != 0 && !isObjectOnIce(box.GetType(), box.GetGameboardPosition())) return moveBlock;
-				if (box.IsMoving() || moveObject(box, direction, moveBlock) == 0) return moveBlock;
-			}
-		}
-		moveBlock++;
+bool Level::isObjectReachWall(Object::Type type, POINT position, Direction direction) {
+	std::vector<POINT> sidePositions = getObjectSidePositions(type, position, direction);
+	for (POINT position : sidePositions) {
+		if (!IsInsideGameboard(position) || gameboard[position.x][position.y] == 0) return true;
 	}
-	return moveBlock;
-}
-
-int Level::getMoveMediumBoxBlock(Object &object, Direction direction, int waitBlock) {
-	if (direction == UP || direction == DOWN) return getMoveMediumBoxBlockVertical(object, direction, waitBlock);
-	return getMoveMediumBoxBlockHorizontal(object, direction, waitBlock);
-}
-
-int Level::getMoveMediumBoxBlockHorizontal(Object& object, Direction direction, int waitBlock) {
-	int moveBlock = 0;
-	POINT objectMainPosition = object.GetGameboardPosition();
-	POINT position = objectMainPosition;
-	if (direction == RIGHT) position.x += 1;
-	while (!isMediumBoxReachWall(objectMainPosition, direction) && (moveBlock == 0 || isObjectOnIce(Object::MEDIUM_BOX, objectMainPosition))) {
-		objectMainPosition = GetOffsetPoint(objectMainPosition, direction);
-		position = GetOffsetPoint(position, direction);
-		for (Object& box : boxs) {
-			if (isPointInsideObject(box, position)) {
-				if (moveBlock != 0 && !isObjectOnIce(box.GetType(), box.GetGameboardPosition())) return moveBlock;
-				if (box.IsMoving() || moveObject(box, direction, moveBlock) == 0) return moveBlock;
-			}
-		}
-		moveBlock++;
-	}
-	return moveBlock;
-}
-
-int Level::getMoveMediumBoxBlockVertical(Object& object, Direction direction, int waitBlock) {
-	int moveBlock = 0;
-	POINT objectMainPosition = object.GetGameboardPosition();
-	POINT position1 = objectMainPosition;
-	POINT position2 = { objectMainPosition.x + 1, objectMainPosition.y };
-	while (!isMediumBoxReachWall(objectMainPosition, direction) && (moveBlock == 0 || isObjectOnIce(Object::MEDIUM_BOX, objectMainPosition))) {
-		objectMainPosition = GetOffsetPoint(objectMainPosition, direction);
-		position1 = GetOffsetPoint(position1, direction);
-		position2 = GetOffsetPoint(position2, direction);
-		for (Object& box : boxs) {
-			if (isPointInsideObject(box, position1) || isPointInsideObject(box, position2)) {
-				if (moveBlock != 0 && !isObjectOnIce(box.GetType(), box.GetGameboardPosition())) return moveBlock;
-				if (box.IsMoving() || moveObject(box, direction, moveBlock) == 0) return moveBlock;
-			}
-		}
-		moveBlock++;
-	}
-	return moveBlock;
-}
-
-int Level::getMoveLargeBoxBlock(Object& object, Direction direction, int waitBlock) {
-	if (direction == UP || direction == DOWN) return getMoveLargeBoxBlockVertical(object, direction, waitBlock);
-	return getMoveLargeBoxBlockHorizontal(object, direction, waitBlock);
-}
-
-int Level::getMoveLargeBoxBlockHorizontal(Object& object, Direction direction, int waitBlock) {
-	int moveBlock = 0;
-	POINT objectMainPosition = object.GetGameboardPosition();
-	POINT position1 = objectMainPosition;
-	POINT position2 = { objectMainPosition.x, objectMainPosition.y + 1 };
-	if (direction == RIGHT) {
-		position1.x += 1;
-		position2.x += 1;
-	}
-	while (!isLargeBoxReachWall(objectMainPosition, direction) && (moveBlock == 0 || isObjectOnIce(Object::LARGE_BOX, objectMainPosition))) {
-		objectMainPosition = GetOffsetPoint(objectMainPosition, direction);
-		position1 = GetOffsetPoint(position1, direction);
-		position2 = GetOffsetPoint(position2, direction);
-		for (Object& box : boxs) {
-			if (isPointInsideObject(box, position1) || isPointInsideObject(box, position2)) {
-				if (moveBlock != 0 && !isObjectOnIce(box.GetType(), box.GetGameboardPosition())) return moveBlock;
-				if (box.IsMoving() || moveObject(box, direction, moveBlock) == 0) return moveBlock;
-			}
-		}
-		moveBlock++;
-	}
-	return moveBlock;
-}
-
-int Level::getMoveLargeBoxBlockVertical(Object& object, Direction direction, int waitBlock) {
-	int moveBlock = 0;
-	POINT objectMainPosition = object.GetGameboardPosition();
-	POINT position1 = objectMainPosition;
-	POINT position2 = { objectMainPosition.x + 1, objectMainPosition.y };
-	if (direction == DOWN) {
-		position1.y += 1;
-		position2.y += 1;
-	}
-	while (!isLargeBoxReachWall(objectMainPosition, direction) && (moveBlock == 0 || isObjectOnIce(Object::LARGE_BOX, objectMainPosition))) {
-		objectMainPosition = GetOffsetPoint(objectMainPosition, direction);
-		position1 = GetOffsetPoint(position1, direction);
-		position2 = GetOffsetPoint(position2, direction);
-		for (Object& box : boxs) {
-			if (isPointInsideObject(box, position1) || isPointInsideObject(box, position2)) {
-				if (moveBlock != 0 && !isObjectOnIce(box.GetType(), box.GetGameboardPosition())) return moveBlock;
-				if (box.IsMoving() || moveObject(box, direction, moveBlock) == 0) return moveBlock;
-			}
-		}
-		moveBlock++;
-	}
-	return moveBlock;
-}
-
-bool Level::isObjectReachWall(Object& object, Direction direction) {
-	Object::Type type = object.GetType();
-	if (type == Object::BOB) return isBobReachWall(object.GetGameboardPosition(), direction);
-	if (type == Object::SMALL_BOX) return isSmallBoxReachWall(object.GetGameboardPosition(), direction);
-	if (type == Object::MEDIUM_BOX) return isMediumBoxReachWall(object.GetGameboardPosition(), direction);
-	if (type == Object::LARGE_BOX) return isLargeBoxReachWall(object.GetGameboardPosition(), direction);
-	throw new runtime_error("Object type wrong!");
-}
-
-bool Level::isBobReachWall(POINT position, Direction direction) {
-	POINT nextPosition = GetOffsetPoint(position, direction);
-	if (!IsInsideGameboard(nextPosition)) return true;
-	if (gameboard[nextPosition.x][nextPosition.y] == 0) return true;
-	for (Object &hole : holes) {
-		POINT holePosition = hole.GetGameboardPosition();
-		if (holePosition.x == nextPosition.x && holePosition.y == nextPosition.y) return true;
-	}
+	if (type == Object::BOB) return isPointOnHoles(GetOffsetPoint(position, direction));
 	return false;
 }
 
-bool Level::isSmallBoxReachWall(POINT position, Direction direction) {
-	if (direction == UP) {
-		return position.y == 0 || gameboard[position.x][position.y - 1] == 0;
-	} else if (direction == DOWN) {
-		return position.y == gameboardHeight - 1 || gameboard[position.x][position.y + 1] == 0;
-	} else if (direction == LEFT) {
-		return position.x == 0 || gameboard[position.x - 1][position.y] == 0;
-	} else if (direction == RIGHT) {
-		return position.x == gameboardWidth - 1 || gameboard[position.x + 1][position.y] == 0;
+bool Level::isPointOnHoles(POINT position) {
+	for (Object &hole : holes) {
+		POINT holePosition = hole.GetGameboardPosition();
+		if (holePosition.x == position.x && holePosition.y == position.y) return true;
 	}
-	throw new runtime_error("Move direction wrong!");
-}
-
-bool Level::isMediumBoxReachWall(POINT position, Direction direction) {
-	if (direction == UP) {
-		return position.y == 0 || gameboard[position.x][position.y - 1] == 0 || gameboard[position.x + 1][position.y - 1] == 0;
-	} else if (direction == DOWN) {
-		return position.y == gameboardHeight - 1 || gameboard[position.x][position.y + 1] == 0 || gameboard[position.x + 1][position.y + 1] == 0;
-	} else if (direction == LEFT) {
-		return position.x == 0 || gameboard[position.x - 1][position.y] == 0;
-	} else if (direction == RIGHT) {
-		return position.x == gameboardWidth - 2 || gameboard[position.x + 2][position.y] == 0;
-	}
-	throw new runtime_error("Move direction wrong!");
-}
-
-bool Level::isLargeBoxReachWall(POINT position, Direction direction) {
-	if (direction == UP) {
-		return position.y == 0 || gameboard[position.x][position.y - 1] == 0 || gameboard[position.x + 1][position.y - 1] == 0;
-	} else if (direction == DOWN) {
-		return position.y == gameboardHeight - 2 || gameboard[position.x][position.y + 2] == 0 || gameboard[position.x + 1][position.y + 2] == 0;
-	} else if (direction == LEFT) {
-		return position.x == 0 || gameboard[position.x - 1][position.y] == 0 || gameboard[position.x - 1][position.y + 1] == 0;
-	} else if (direction == RIGHT) {
-		return position.x == gameboardWidth - 2 || gameboard[position.x + 2][position.y] == 0 || gameboard[position.x + 2][position.y + 1] == 0;
-	}
-	throw new runtime_error("Move direction wrong!");
+	return false;
 }
