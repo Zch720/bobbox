@@ -60,6 +60,7 @@ namespace game_framework {
 		void OnMove();
 		void OnShow();
 	private:
+		bool firstLoadGame = true;
 		bool startLayoutShown = false;
 		bool isSwitchingScene = false;
 

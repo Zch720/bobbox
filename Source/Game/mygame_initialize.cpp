@@ -28,7 +28,8 @@ void CGameStateInit::OnInit() {
 }
 
 void CGameStateInit::OnBeginState() {
-	SwitchScene::OpenLeft();
+	if (!firstLoadGame) SwitchScene::OpenLeft();
+	else firstLoadGame = false;
 	lastLevel = -1;
 }
 
