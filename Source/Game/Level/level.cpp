@@ -24,7 +24,9 @@ void Level::Init() {
 void Level::Clear() {
 	while (!moveBuffer.empty()) moveBuffer.pop();
 	while (!undos.empty()) undos.pop();
+	isDead = false;
 	gameboard.clear();
+	blockReachable.clear();
 	goals.clear();
 	holes.clear();
 	boxs.clear();
@@ -43,6 +45,8 @@ void Level::LoadLevel(int level) {
 
 	for (int w = 0; w < gameboardWidth; w++) 
 		gameboard.push_back(std::vector<int>(gameboardHeight));
+	for (int w = 0; w < gameboardWidth; w++) 
+		blockReachable.push_back(std::vector<bool>(gameboardHeight));
 
 	dataFile >> buffer;
 	for (int h = 0; h < gameboardHeight; h++) {
@@ -129,23 +133,32 @@ void Level::CheckMouseClick(POINT point) {
 }
 
 void Level::MoveUp() {
+	if (isDead) return;
 	moveBuffer.push(UP);
 }
 
 void Level::MoveDown() {
+	if (isDead) return;
 	moveBuffer.push(DOWN);
 }
 
 void Level::MoveLeft() {
+	if (isDead) return;
 	moveBuffer.push(LEFT);
 }
 
 void Level::MoveRight() {
+	if (isDead) return;
 	moveBuffer.push(RIGHT);
 }
 
 void Level::Undo() {
 	if (undos.empty()) return;
+
+	if (isDead) {
+		isDead = false;
+		statusDisplay.LevelStatusClean();
+	}
 
 	std::vector<UndoInfo> undoSteps = undos.top();
 	undos.pop();
@@ -176,6 +189,10 @@ void Level::Undo() {
 void Level::Update() {
 	if (moveBuffer.empty()) return;
 	if (bob.IsMoving()) return;
+	if (isDead) {
+		while(!moveBuffer.empty()) moveBuffer.pop();
+		return;
+	}
 
 	undoBuffer.clear();
 
@@ -196,6 +213,8 @@ void Level::Update() {
 		AudioPlayer::PlayWalkSound();
 		undos.push(undoBuffer);
 	}
+
+	checkIsDead();
 }
 
 void Level::Show() {
@@ -223,6 +242,169 @@ void Level::Show() {
 		AudioPlayer::PlayClearSound();
 		statusDisplay.StartClear();
 	}
+	if (isDead && !statusDisplay.IsShowing()) {
+		AudioPlayer::PlayDeadSound();
+		statusDisplay.StartDead();
+	}
+}
+
+void Level::checkIsDead() {
+	findReachableBlock();
+
+	checkedMovableBox.clear();
+	for (Object& box : boxs) {
+		if (isBoxSideReachable(box, UP)) {
+			checkBoxMovableWithDirection(box, DOWN);
+		}
+		if (isBoxSideReachable(box, DOWN)) {
+			checkBoxMovableWithDirection(box, UP);
+		}
+		if (isBoxSideReachable(box, LEFT)) {
+			checkBoxMovableWithDirection(box, RIGHT);
+		}
+		if (isBoxSideReachable(box, RIGHT)) {
+			checkBoxMovableWithDirection(box, LEFT);
+		}
+	}
+
+	int reachGoalCount = 0;
+	for (Object& box : boxs) {
+		if (isBoxOnGoal(box)) reachGoalCount++;
+	}
+
+	isDead = (checkedMovableBox.size() == 0) && (reachGoalCount != boxs.size());
+}
+
+void Level::findReachableBlock() {
+	for (int i = 0; i < gameboardWidth; i++) 
+		for (int j = 0; j < gameboardHeight; j++) {
+			blockReachable[i][j] = false;
+	}
+
+	std::stack<POINT> dfsFindReachable;
+	POINT position, offsetPotition;
+	dfsFindReachable.push(bob.GetGameboardPosition());
+	while (!dfsFindReachable.empty()) {
+		position = dfsFindReachable.top();
+		dfsFindReachable.pop();
+
+		if (blockReachable[position.x][position.y]) continue;
+		blockReachable[position.x][position.y] = true;
+
+		offsetPotition = GetOffsetPoint(position, UP);
+		if (IsInsideGameboard(offsetPotition) && gameboard[offsetPotition.x][offsetPotition.y] != 0 && isBlockEmpty(offsetPotition)) {
+			dfsFindReachable.push(offsetPotition);
+		}
+		offsetPotition = GetOffsetPoint(position, DOWN);
+		if (IsInsideGameboard(offsetPotition) && gameboard[offsetPotition.x][offsetPotition.y] != 0 && isBlockEmpty(offsetPotition)) {
+			dfsFindReachable.push(offsetPotition);
+		}
+		offsetPotition = GetOffsetPoint(position, LEFT);
+		if (IsInsideGameboard(offsetPotition) && gameboard[offsetPotition.x][offsetPotition.y] != 0 && isBlockEmpty(offsetPotition)) {
+			dfsFindReachable.push(offsetPotition);
+		}
+		offsetPotition = GetOffsetPoint(position, RIGHT);
+		if (IsInsideGameboard(offsetPotition) && gameboard[offsetPotition.x][offsetPotition.y] != 0 && isBlockEmpty(offsetPotition)) {
+			dfsFindReachable.push(offsetPotition);
+		}
+	}
+}
+
+bool Level::checkBoxMovableWithDirection(Object& object, Direction direction) {
+	for (MoveableInfo moveableInfo : checkedMovableBox) {
+		POINT boxPosition = object.GetGameboardPosition();
+		if (moveableInfo.position.x == boxPosition.x && moveableInfo.position.y == boxPosition.y) {
+			if (direction == UP && moveableInfo.up) return true;
+			if (direction == DOWN && moveableInfo.down) return true;
+			if (direction == LEFT && moveableInfo.left) return true;
+			if (direction == RIGHT && moveableInfo.right) return true;
+		}
+	}
+	if (isObjectReachWall(object, direction)) return false;
+
+	std::vector<POINT> boxSidePositions = getBoxSidePositions(object, direction);
+	for (Object& box : boxs) {
+		for (POINT sidePosition : boxSidePositions) {
+			if (isPointInsideObject(box, sidePosition)) {
+				if (!checkBoxMovableWithDirection(box, direction)) return false;
+			}
+		}
+	}
+
+	int infoIndex = -1;
+	for (size_t i = 0; i < checkedMovableBox.size(); i++) {
+		if (checkedMovableBox[i].position.x == object.GetGameboardPosition().x && checkedMovableBox[i].position.y == object.GetGameboardPosition().y) {
+			infoIndex = i;
+			break;
+		}
+	}
+	if (infoIndex == -1) {
+		checkedMovableBox.push_back({});
+		infoIndex = checkedMovableBox.size() - 1;
+		checkedMovableBox[infoIndex].position = object.GetGameboardPosition();
+	}
+	if (direction == UP) checkedMovableBox[infoIndex].up = true;
+	if (direction == DOWN) checkedMovableBox[infoIndex].down = true;
+	if (direction == LEFT) checkedMovableBox[infoIndex].left = true;
+	if (direction == RIGHT) checkedMovableBox[infoIndex].right = true;
+	return true;
+}
+
+bool Level::isBoxSideReachable(Object& object, Direction direction) {
+	Object::Type type = object.GetType();
+	if (type == Object::SMALL_BOX) {
+		POINT position = object.GetGameboardPosition();
+		position = GetOffsetPoint(position, direction);
+		return isBlockReachable(position);
+	}
+	if (type == Object::MEDIUM_BOX) {
+		if (direction == LEFT || direction == RIGHT) {
+			POINT position = object.GetGameboardPosition();
+			if (direction == RIGHT) position = GetOffsetPoint(position, RIGHT);
+			position = GetOffsetPoint(position, direction);
+			return isBlockReachable(position);
+		} else {
+			POINT position1 = object.GetGameboardPosition();
+			POINT position2 = GetOffsetPoint(position1, RIGHT);
+			position1 = GetOffsetPoint(position1, direction);
+			position2 = GetOffsetPoint(position2, direction);
+			return isBlockReachable(position1) || isBlockReachable(position2);
+		}
+	}
+	if (type == Object::LARGE_BOX) {
+		POINT position1 = object.GetGameboardPosition();
+		POINT position2;
+		if (direction == LEFT) {
+			position2 = GetOffsetPoint(position1, DOWN);
+		} else if (direction == RIGHT) {
+			position1 = GetOffsetPoint(position1, RIGHT);
+			position2 = GetOffsetPoint(position1, DOWN);
+		} else if (direction == UP) {
+			position2 = GetOffsetPoint(position1, RIGHT);
+		} else if (direction == DOWN) {
+			position1 = GetOffsetPoint(position1, DOWN);
+			position2 = GetOffsetPoint(position1, RIGHT);
+		}
+		position1 = GetOffsetPoint(position1, direction);
+		position2 = GetOffsetPoint(position2, direction);
+		return isBlockReachable(position1) || isBlockReachable(position2);
+	}
+	return false;
+}
+
+bool Level::isBlockReachable(POINT position) {
+	return IsInsideGameboard(position) && blockReachable[position.x][position.y];
+}
+
+bool Level::isBlockEmpty(POINT position) {
+	bool result = false;
+	for (Object &box : boxs) {
+		result |= isPointInsideObject(box, position);
+	}
+	for (Object &hole : holes) {
+		result |= isPointInsideObject(hole, position);
+	}
+	return !result;
 }
 
 bool Level::isPointInsideObject(Object& object, POINT point) {
@@ -239,6 +421,17 @@ bool Level::isPointInsideObject(Object& object, POINT point) {
 			|| (objectPosition.x == point.x && objectPosition.y + 1 == point.y)
 			|| (objectPosition.x + 1 == point.x && objectPosition.y + 1 == point.y);
 	}
+	return false;
+}
+
+bool Level::isBoxOnGoal(Object& box) {
+	int count = 0;
+	for (POINT goal : goals) {
+		if (isPointInsideObject(box, goal)) count++;
+	}
+	if (box.GetType() == Object::SMALL_BOX) return count == 1;
+	if (box.GetType() == Object::MEDIUM_BOX) return count == 2;
+	if (box.GetType() == Object::LARGE_BOX) return count == 4;
 	return false;
 }
 
@@ -297,7 +490,43 @@ Object& Level::findObjectAtPosition(Object::Type type, POINT position) {
 	throw runtime_error("can not find object at point(" + to_string(position.x) + ", " + to_string(position.y) + ")");
 }
 
-int Level::moveObject(Object &object, Direction direction, int waitBlock) {
+std::vector<POINT> Level::getBoxSidePositions(Object& box, Direction direction) {
+	std::vector<POINT> result;
+	Object::Type type = box.GetType();
+	if (type == Object::SMALL_BOX) {
+		result.push_back(GetOffsetPoint(box.GetGameboardPosition(), direction));
+	} else if (type == Object::MEDIUM_BOX) {
+		if (direction == LEFT) {
+			result.push_back(GetOffsetPoint(box.GetGameboardPosition(), direction));
+		} else if (direction == RIGHT) {
+			result.push_back(GetOffsetPoint(GetOffsetPoint(box.GetGameboardPosition(), RIGHT), direction));
+		} else {
+			result.push_back(GetOffsetPoint(box.GetGameboardPosition(), direction));
+			result.push_back(GetOffsetPoint(GetOffsetPoint(box.GetGameboardPosition(), RIGHT), direction));
+		}
+	} else if (type == Object::LARGE_BOX) {
+		POINT position1 = box.GetGameboardPosition();
+		POINT position2;
+		if (direction == LEFT) {
+			position2 = GetOffsetPoint(position1, DOWN);
+		} else if (direction == RIGHT) {
+			position1 = GetOffsetPoint(position1, RIGHT);
+			position2 = GetOffsetPoint(position1, DOWN);
+		} else if (direction == UP) {
+			position2 = GetOffsetPoint(position1, RIGHT);
+		} else if (direction == DOWN) {
+			position1 = GetOffsetPoint(position1, DOWN);
+			position2 = GetOffsetPoint(position1, RIGHT);
+		}
+		position1 = GetOffsetPoint(position1, direction);
+		position2 = GetOffsetPoint(position2, direction);
+		result.push_back(position1);
+		result.push_back(position2);
+	}
+	return result;
+}
+
+int Level::moveObject(Object& object, Direction direction, int waitBlock) {
 	int moveBlock = 0;
 	Object::Type type = object.GetType();
 	if (type == Object::BOB) {
@@ -464,6 +693,8 @@ bool Level::isObjectReachWall(Object& object, Direction direction) {
 	Object::Type type = object.GetType();
 	if (type == Object::BOB) return isBobReachWall(object.GetGameboardPosition(), direction);
 	if (type == Object::SMALL_BOX) return isSmallBoxReachWall(object.GetGameboardPosition(), direction);
+	if (type == Object::MEDIUM_BOX) return isMediumBoxReachWall(object.GetGameboardPosition(), direction);
+	if (type == Object::LARGE_BOX) return isLargeBoxReachWall(object.GetGameboardPosition(), direction);
 	throw new runtime_error("Object type wrong!");
 }
 

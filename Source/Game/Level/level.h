@@ -47,6 +47,14 @@ private:
 		int moveBlock;
 	};
 
+	struct MoveableInfo {
+		POINT position;
+		bool up;
+		bool down;
+		bool left;
+		bool right;
+	};
+
 	static std::string RESOURCES_DIR;
 	static std::vector<game_framework::CMovingBitmap> levelBackgrounds;
 
@@ -57,6 +65,10 @@ private:
 	Button backButton;
 	Button musicButton;
 	Button soundButton;
+	
+	std::vector<std::vector<bool>> blockReachable;
+	std::vector<MoveableInfo> checkedMovableBox;
+	bool isDead = false;
 
 	int gameboardWidth = 0, gameboardHeight = 0;
 	std::vector<std::vector<int>> gameboard;
@@ -69,13 +81,24 @@ private:
 	std::vector<UndoInfo> undoBuffer;
 	std::vector<Object> filledObjectBuffer;
 
+	void checkIsDead();
+	void findReachableBlock();
+
+	bool checkBoxMovableWithDirection(Object &box, Direction direction);
+
+	bool isBoxSideReachable(Object &object, Direction direction);
+	bool isBlockReachable(POINT position);
+	bool isBlockEmpty(POINT position);
 	bool isPointInsideObject(Object &object, POINT point);
+	bool isBoxOnGoal(Object &box);
 	bool isObjectOnIce(Object::Type type, POINT position);
 
 	POINT getBoxRealPosition(POINT origionPosition, POINT gameboardPosition);
 
 	void checkHoleFill();
 	Object& findObjectAtPosition(Object::Type objectType, POINT position);
+
+	std::vector<POINT> getBoxSidePositions(Object &box, Direction direction);
 
 	int moveObject(Object &object, Direction direction, int waitBlock);
 	int getMoveBobBlock(Object &object, Direction direction, int waitBlcok);
