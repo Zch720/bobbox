@@ -40,6 +40,7 @@ void CGameStateRun::OnInit() {
 	levelManager.Init();
 	levelManager.SetBackButtonOnClick([this]() {
 		isSwitchingScene = true;
+		AudioPlayer::PlayTransitionSound();
 		SwitchScene::CloseRight();
 	});
 	levelManager.SetMusicButtonOnClick([]() {
