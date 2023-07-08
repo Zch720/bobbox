@@ -27,9 +27,9 @@ void CGameStateRun::OnBeginState() {
 		levelManager.LoadLevel(currentLevel);
 	}
 
-	if (lastLevel < 1) {
+	if (lastLevel == 0 || lastLevel == -1) {
 		SwitchScene::OpenLeft();
-	} else {
+	} else if (lastLevel != -2) {
 		SwitchScene::OpenRight();
 	}
 
@@ -136,6 +136,7 @@ void CGameStateRun::levelKeyInput(char nChar) {
 	} else if (nChar == 'Z' || nChar == 'U') {
 		levelManager.Undo();
 	} else if (nChar == 'R') {
+		lastLevel = -2;
 		levelManager.Clear();
 		GotoGameState(GAME_STATE_RUN);
 	}
