@@ -2,7 +2,6 @@
 #include "level.h"
 #include "../audio_player.h"
 #include <string>
-#include <fstream>
 
 std::string Level::RESOURCES_DIR = "./resources/level/";
 std::vector<game_framework::CMovingBitmap> Level::levelBackgrounds = std::vector<game_framework::CMovingBitmap>(16);
@@ -37,58 +36,14 @@ void Level::LoadLevel(int level) {
 	background = levelBackgrounds[level - 1];
 
 	std::ifstream dataFile(RESOURCES_DIR + to_string(level - 1) + ".level");
-	POINT textureOriginPosition{0, 0};
-	std::string buffer;
 
-	dataFile >> buffer>> gameboardWidth>> gameboardHeight;
-	dataFile >> buffer >> textureOriginPosition.x >> textureOriginPosition.y;
-
-	for (int w = 0; w < gameboardWidth; w++) 
-		gameboard.push_back(std::vector<int>(gameboardHeight));
-	for (int w = 0; w < gameboardWidth; w++) 
-		blockReachable.push_back(std::vector<bool>(gameboardHeight));
-
-	dataFile >> buffer;
-	for (int h = 0; h < gameboardHeight; h++) {
-		for (int w = 0; w < gameboardWidth; w++) {
-			dataFile >> gameboard[w][h];
-		}
-	}
-
-	int goalCount;
-	dataFile >> buffer >> goalCount;
-	goals = std::vector<POINT>(goalCount);
-	for (int i = 0; i < goalCount; i++) {
-		dataFile >> goals[i].x >> goals[i].y;
-	}
-
-	int n, x, y;
-	dataFile >> buffer >> x >> y;
-	bob = BobObject({ textureOriginPosition.x + x * 83 + 13, textureOriginPosition.y + y * 83 - 35 }, {x, y});
-
-	dataFile >> buffer >> n;
-	while (n--) {
-		dataFile >> x >> y;
-		holes.push_back(HoleObject(getBoxRealPosition(textureOriginPosition, { x, y }), { x, y }));
-	}
-	
-	dataFile >> buffer >> n;
-	while (n--) {
-		dataFile >> x >> y;
-		boxs.push_back(SmallBoxObject(getBoxRealPosition(textureOriginPosition, { x, y }), { x, y }));
-	}
-
-	dataFile >> buffer >> n;
-	while (n--) {
-		dataFile >> x >> y;
-		boxs.push_back(MediumBoxObject(getBoxRealPosition(textureOriginPosition, { x, y }), { x, y }));
-	}
-
-	dataFile >> buffer >> n;
-	while (n--) {
-		dataFile >> x >> y;
-		boxs.push_back(LargeBoxObject(getBoxRealPosition(textureOriginPosition, { x, y }), { x, y }));
-	}
+	loadTextureOriginPosition(dataFile);
+	loadGameboard(dataFile);
+	loadGoals(dataFile);
+	loadBob(dataFile);
+	loadHoles(dataFile);
+	loadBoxs(dataFile);
+	dataFile.close();
 }
 
 bool Level::IsReachGoal() {
@@ -237,6 +192,83 @@ void Level::Show() {
 	if (isDead && !statusDisplay.IsShowing()) {
 		AudioPlayer::PlayDeadSound();
 		statusDisplay.StartDead();
+	}
+}
+
+void Level::loadTextureOriginPosition(std::istream& input) {
+	std::string buffer;
+
+	input >> buffer >> textureOriginPosition.x >> textureOriginPosition.y;
+}
+
+void Level::loadGameboard(std::istream& input) {
+	std::string buffer;
+
+	input >> buffer>> gameboardWidth>> gameboardHeight;
+
+	for (int w = 0; w < gameboardWidth; w++) 
+		gameboard.push_back(std::vector<int>(gameboardHeight));
+	for (int w = 0; w < gameboardWidth; w++) 
+		blockReachable.push_back(std::vector<bool>(gameboardHeight));
+
+	input >> buffer;
+	for (int h = 0; h < gameboardHeight; h++) {
+		for (int w = 0; w < gameboardWidth; w++) {
+			input >> gameboard[w][h];
+		}
+	}
+}
+
+void Level::loadGoals(std::istream& input) {
+	std::string buffer;
+	int goalCount;
+
+	input >> buffer >> goalCount;
+	goals = std::vector<POINT>(goalCount);
+	for (int i = 0; i < goalCount; i++) {
+		input >> goals[i].x >> goals[i].y;
+	}
+}
+
+void Level::loadBob(std::istream& input) {
+	std::string buffer;
+	int x, y;
+
+	input >> buffer >> x >> y;
+	bob = BobObject({ textureOriginPosition.x + x * 83 + 13, textureOriginPosition.y + y * 83 - 35 }, {x, y});
+}
+
+void Level::loadHoles(std::istream& input) {
+	std::string buffer;
+	int n, x, y;
+
+	input >> buffer >> n;
+	while (n--) {
+		input >> x >> y;
+		holes.push_back(HoleObject(getBoxRealPosition(textureOriginPosition, { x, y }), { x, y }));
+	}
+}
+
+void Level::loadBoxs(std::istream& input) {
+	std::string buffer;
+	int n, x, y;
+
+	input >> buffer >> n;
+	while (n--) {
+		input >> x >> y;
+		boxs.push_back(SmallBoxObject(getBoxRealPosition(textureOriginPosition, { x, y }), { x, y }));
+	}
+
+	input >> buffer >> n;
+	while (n--) {
+		input >> x >> y;
+		boxs.push_back(MediumBoxObject(getBoxRealPosition(textureOriginPosition, { x, y }), { x, y }));
+	}
+
+	input >> buffer >> n;
+	while (n--) {
+		input >> x >> y;
+		boxs.push_back(LargeBoxObject(getBoxRealPosition(textureOriginPosition, { x, y }), { x, y }));
 	}
 }
 

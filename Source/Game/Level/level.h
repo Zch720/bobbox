@@ -2,6 +2,7 @@
 
 #include <queue>
 #include <stack>
+#include <fstream>
 #include "../../Library/gameutil.h"
 #include "object.h"
 #include "level_status_animation.h"
@@ -60,6 +61,7 @@ private:
 	queue<Direction> moveBuffer;
 	LevelStatusDisplay statusDisplay;
 
+	POINT textureOriginPosition;
 	game_framework::CMovingBitmap background;
 	Button backButton;
 	Button musicButton;
@@ -79,6 +81,13 @@ private:
 	std::stack<std::vector<UndoInfo>> undos;
 	std::vector<UndoInfo> undoBuffer;
 	std::vector<Object> filledObjectBuffer;
+
+	void loadTextureOriginPosition(std::istream &input);
+	void loadGameboard(std::istream &input);
+	void loadGoals(std::istream &input);
+	void loadBob(std::istream &input);
+	void loadHoles(std::istream &input);
+	void loadBoxs(std::istream &input);
 
 	void checkIsDead();
 	void findReachableBlock();
