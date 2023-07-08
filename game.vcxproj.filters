@@ -81,6 +81,14 @@
     <ClCompile Include="Source\Game\util\direction.cpp">
       <Filter>MyGame\util</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Game\audio_player.cpp" />
+    <ClCompile Include="Source\Game\switch_scene.cpp" />
+    <ClCompile Include="Source\Game\Level\level_status_animation.cpp">
+      <Filter>MyGame\Level</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Game\Level\story.cpp">
+      <Filter>MyGame\Level</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Library\audio.h">
@@ -136,6 +144,14 @@
     </ClInclude>
     <ClInclude Include="Source\Game\util\direction.h">
       <Filter>MyGame\util</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Game\audio_player.h" />
+    <ClInclude Include="Source\Game\switch_scene.h" />
+    <ClInclude Include="Source\Game\Level\level_status_animation.h">
+      <Filter>MyGame\Level</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Game\Level\story.h">
+      <Filter>MyGame\Level</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
