@@ -2,9 +2,11 @@
 
 #include <queue>
 #include <stack>
+#include <fstream>
 #include "../../Library/gameutil.h"
 #include "object.h"
 #include "level_status_animation.h"
+#include "../util/button.h"
 
 class Level {
 public:
@@ -14,7 +16,11 @@ public:
 	void LoadLevel(int level);
 
 	bool IsReachGoal();
-	bool IsInsideGameboard(POINT position);
+
+	void SetBackButtonOnClick(Button::OnClickFunc func);
+	void SetMusicButtonOnClick(Button::OnClickFunc func);
+	void SetSoundButtonOnClick(Button::OnClickFunc func);
+	void CheckMouseClick(POINT point);
 
 	void MoveUp();
 	void MoveDown();
@@ -41,14 +47,29 @@ private:
 		int moveBlock;
 	};
 
+	struct MoveableInfo {
+		POINT position;
+		bool up;
+		bool down;
+		bool left;
+		bool right;
+	};
+
 	static std::string RESOURCES_DIR;
 	static std::vector<game_framework::CMovingBitmap> levelBackgrounds;
 
 	queue<Direction> moveBuffer;
 	LevelStatusDisplay statusDisplay;
 
+	POINT textureOriginPosition;
 	game_framework::CMovingBitmap background;
+	Button backButton;
+	Button musicButton;
+	Button soundButton;
 	
+	std::vector<std::vector<bool>> blockReachable;
+	std::vector<MoveableInfo> checkedMovableBox;
+	bool isDead = false;
 
 	int gameboardWidth = 0, gameboardHeight = 0;
 	std::vector<std::vector<int>> gameboard;
@@ -61,7 +82,26 @@ private:
 	std::vector<UndoInfo> undoBuffer;
 	std::vector<Object> filledObjectBuffer;
 
+	void loadTextureOriginPosition(std::istream &input);
+	void loadGameboard(std::istream &input);
+	void loadGoals(std::istream &input);
+	void loadBob(std::istream &input);
+	void loadHoles(std::istream &input);
+	void loadBoxs(std::istream &input);
+
+	void checkIsDead();
+	void findReachableBlock();
+
+	bool checkBoxMovable(Object &box, Direction direction);
+	bool isBoxAlreadyMoveable(Object &box, Direction direction);
+	int getBoxIndexInMoveableInfos(Object &box);
+	
+	bool isPointInsideGameboard(POINT position);
+	bool isBoxSideReachable(Object &object, Direction direction);
+	bool isBlockReachable(POINT position);
+	bool isBlockEmpty(POINT position);
 	bool isPointInsideObject(Object &object, POINT point);
+	bool isBoxOnGoal(Object &box);
 	bool isObjectOnIce(Object::Type type, POINT position);
 
 	POINT getBoxRealPosition(POINT origionPosition, POINT gameboardPosition);
@@ -69,18 +109,10 @@ private:
 	void checkHoleFill();
 	Object& findObjectAtPosition(Object::Type objectType, POINT position);
 
+	std::vector<POINT> getObjectSidePositions(Object::Type type, POINT objectPosition, Direction direction);
+
 	int moveObject(Object &object, Direction direction, int waitBlock);
-	int getMoveBobBlock(Object &object, Direction direction, int waitBlcok);
-	int getMoveSmallBoxBlock(Object &object, Direction direction, int waitBlock);
-	int getMoveMediumBoxBlock(Object &object, Direction direction, int waitBlock);
-	int getMoveMediumBoxBlockHorizontal(Object &object, Direction direction, int waitBlock);
-	int getMoveMediumBoxBlockVertical(Object &object, Direction direction, int waitBlock);
-	int getMoveLargeBoxBlock(Object &object, Direction direction, int waitBlock);
-	int getMoveLargeBoxBlockHorizontal(Object &object, Direction direction, int waitBlock);
-	int getMoveLargeBoxBlockVertical(Object &object, Direction direction, int waitBlock);
-	bool isObjectReachWall(Object &object, Direction direction);
-	bool isBobReachWall(POINT position, Direction direction);
-	bool isSmallBoxReachWall(POINT position, Direction direction);
-	bool isMediumBoxReachWall(POINT position, Direction direction);
-	bool isLargeBoxReachWall(POINT position, Direction direction);
+	int getObjectMoveBlock(Object &object, Direction direction, int waitBlock);
+	bool isObjectReachWall(Object::Type type, POINT position, Direction direction);
+	bool isPointOnHoles(POINT position);
 };

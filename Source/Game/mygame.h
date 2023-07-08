@@ -40,6 +40,7 @@
 
 #include "game_status.h"
 #include "switch_scene.h"
+#include "audio_player.h"
 #include "Layout/start.h"
 #include "Layout/choose_level.h"
 #include "Level/level.h"
@@ -59,6 +60,7 @@ namespace game_framework {
 		void OnMove();
 		void OnShow();
 	private:
+		bool firstLoadGame = true;
 		bool startLayoutShown = false;
 		bool isSwitchingScene = false;
 

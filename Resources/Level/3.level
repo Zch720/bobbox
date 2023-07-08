@@ -1,6 +1,6 @@
-#gameboard_size 5 5
-
 #texture_origin_position 535 197
+
+#gameboard_size 5 5
 
 #gameboard
 0 0 1 0 0

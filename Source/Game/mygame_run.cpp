@@ -27,9 +27,9 @@ void CGameStateRun::OnBeginState() {
 		levelManager.LoadLevel(currentLevel);
 	}
 
-	if (lastLevel < 1) {
+	if (lastLevel == 0 || lastLevel == -1) {
 		SwitchScene::OpenLeft();
-	} else {
+	} else if (lastLevel != -2) {
 		SwitchScene::OpenRight();
 	}
 
@@ -38,6 +38,21 @@ void CGameStateRun::OnBeginState() {
 
 void CGameStateRun::OnInit() {
 	levelManager.Init();
+	levelManager.SetBackButtonOnClick([this]() {
+		isSwitchingScene = true;
+		SwitchScene::CloseRight();
+	});
+	levelManager.SetMusicButtonOnClick([]() {
+		AudioPlayer::SwitchMusicOnOff();
+		if (AudioPlayer::GetMusicOnOff()) {
+			AudioPlayer::PlayBGM();
+		} else {
+			AudioPlayer::StopBGM();
+		}
+	});
+	levelManager.SetSoundButtonOnClick([]() {
+		AudioPlayer::SwitchSoundOnOff();
+	});
 }
 
 void CGameStateRun::OnMove() {
@@ -58,6 +73,7 @@ void CGameStateRun::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags) {
 }
 
 void CGameStateRun::OnLButtonDown(UINT nFlags, CPoint point) {
+	levelManager.CheckMouseClick(point);
 }
 
 void CGameStateRun::OnLButtonUp(UINT nFlags, CPoint point) {
@@ -99,6 +115,7 @@ void CGameStateRun::levelKeyInput(char nChar) {
 	if (levelManager.IsReachGoal()) {
 		if (nChar == VK_RETURN && !SwitchScene::IsClosing()) {
 			isSwitchingScene = true;
+			AudioPlayer::PlayTransitionSound();
 			SwitchScene::CloseRight();
 		}
 		return;
@@ -106,6 +123,7 @@ void CGameStateRun::levelKeyInput(char nChar) {
 
 	if (nChar == VK_ESCAPE) {
 		isSwitchingScene = true;
+		AudioPlayer::PlayTransitionSound();
 		SwitchScene::CloseRight();
 	} else if (nChar == VK_UP || nChar == 'W') {
 		levelManager.MoveUp();
@@ -118,6 +136,7 @@ void CGameStateRun::levelKeyInput(char nChar) {
 	} else if (nChar == 'Z' || nChar == 'U') {
 		levelManager.Undo();
 	} else if (nChar == 'R') {
+		lastLevel = -2;
 		levelManager.Clear();
 		GotoGameState(GAME_STATE_RUN);
 	}
